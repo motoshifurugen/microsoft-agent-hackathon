@@ -1,0 +1,57 @@
+[project]
+name = "microsoft-agent-hackathon"
+version = "0.1.0"
+description = "Microsoft Agent Hackathon 2026 entry - Agentic AI for business transformation"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "azure-ai-agents>=1.1.0",
+    "azure-ai-projects>=1.0.0",
+    "azure-identity>=1.19.0",
+    "chainlit>=1.3.0",
+    "python-dotenv>=1.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.7.0",
+    "pyright>=1.1.380",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific
+]
+ignore = [
+    "E501",   # line-too-long (ruff format が対応)
+    "RUF001", # ambiguous unicode in string
+    "RUF002", # ambiguous unicode in docstring (日本語コメントの全角括弧を許容)
+    "RUF003", # ambiguous unicode in comment
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+include = ["src", "tests"]
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
