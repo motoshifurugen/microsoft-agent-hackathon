@@ -88,12 +88,16 @@ az containerapp create \
 ```
 .
 ├── README.md                # この文書
+├── docs/
+│   └── azure-setup.md       # Azure リソース構築の全手順 / 現状 / 削除 / トラブル対処
 ├── pyproject.toml           # uv プロジェクト定義
 ├── uv.lock                  # ロックファイル (commit する)
 ├── .python-version          # 3.12
 ├── .env.example             # 環境変数テンプレ
 ├── .gitignore
 ├── Dockerfile               # Container Apps 用
+├── scripts/
+│   └── create_agent.py      # Foundry Agent を 1 回限り作成するスクリプト
 ├── src/
 │   ├── __init__.py
 │   └── app.py               # Chainlit + Foundry Agent エントリポイント
@@ -103,6 +107,8 @@ az containerapp create \
     └── workflows/
         └── ci.yml           # ruff + pyright + pytest
 ```
+
+詳細な Azure リソース構築手順と現状は [`docs/azure-setup.md`](docs/azure-setup.md) を参照。
 
 ---
 
