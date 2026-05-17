@@ -17,6 +17,13 @@ Microsoft Agent Hackathon 2026 用に作成した Azure リソース一式と、
 | Agent | `business-agent` | (project 配下) | model=`gpt-4o` / 業務改革支援用システムプロンプト | Chainlit から呼ばれる Agent |
 | ロール割当 | サインインユーザー | account scope | `Cognitive Services User` | Agent API データ操作権限 |
 
+### メンバー（チーム）
+
+| ユーザー | テナント上の表示 | ロール / スコープ | 操作範囲 |
+|---|---|---|---|
+| Owner（cmb-sy） | `free.nakashima@gmail.com` | Subscription `Owner`（実質） | 全権限。課金・サブスク削除も可 |
+| Guest（motoshifurugen） | `amanogawa_m_icloud.com#EXT#@freenakashimagmail.onmicrosoft.com` | RG `rg-mah-2026` の `Owner` + Foundry account の `Cognitive Services User` | RG 内 全リソース操作（作成/更新/削除/ロール変更）+ Agent data plane |
+
 `.env` には以下 2 値が入る（実値は git 管理外）:
 
 ```
@@ -142,6 +149,46 @@ az role assignment create \
   - `Cognitive Services Contributor` (control plane も含む。デプロイ作成等まで）
   - `Azure AI User` ❌ 存在しない（一部ドキュメントに記載されているが現状未定義）
   - `Azure AI Developer` 開発者向け、Agent 作成可
+
+### 2.8 メンバー招待（B2B Guest）
+
+外部メンバーを招待してチーム開発する場合の手順。`az ad invitation create` は CLI 2.86 で未対応のため Graph API を直接叩く。
+
+```bash
+EMAIL="guest@example.com"
+DISPLAY="Guest Name"
+
+INVITATION=$(az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/invitations" \
+  --body "$(python3 -c "import json;print(json.dumps({
+    'invitedUserEmailAddress':'$EMAIL',
+    'invitedUserDisplayName':'$DISPLAY',
+    'inviteRedirectUrl':'https://portal.azure.com/',
+    'sendInvitationMessage':True}))")")
+
+GUEST_OBJ_ID=$(echo "$INVITATION" | python3 -c "import json,sys;print(json.loads(sys.stdin.read())['invitedUser']['id'])")
+```
+
+ロール付与（RG 全権限 + Foundry data plane）:
+
+```bash
+SUB_ID=$(az account show --query id -o tsv)
+RG_SCOPE="/subscriptions/${SUB_ID}/resourceGroups/rg-mah-2026"
+ACCOUNT_SCOPE="${RG_SCOPE}/providers/Microsoft.CognitiveServices/accounts/<FOUNDRY>"
+
+az role assignment create --assignee-object-id "$GUEST_OBJ_ID" --assignee-principal-type User \
+  --role "Owner" --scope "$RG_SCOPE"
+
+az role assignment create --assignee-object-id "$GUEST_OBJ_ID" --assignee-principal-type User \
+  --role "Cognitive Services User" --scope "$ACCOUNT_SCOPE"
+```
+
+ゲスト側のセットアップ:
+1. 招待メール (`Microsoft Invitations` from `invites@microsoft.com`) のリンクをクリック
+2. Microsoft アカウントでサインインして承諾
+3. https://portal.azure.com/ に移動し、ディレクトリ選択で `freenakashimagmail.onmicrosoft.com` に切替
+4. `rg-mah-2026` が見えれば成功
+5. ローカル開発する場合: `brew install azure-cli && az login --tenant freenakashimagmail.onmicrosoft.com`
 
 ### 2.8 Agent 作成（Python SDK 経由）
 
