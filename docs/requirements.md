@@ -203,8 +203,6 @@ DX 推進部または成功者本人が以下を入力:
 
 **補足:**
 
-- 多要素スコアリング式 (コラボ頻度・負荷・成功率の重み付け) は MVP では採用せず、Phase 2 の最適化項目として扱う
-
 ### 3.6 自律ループ (Agentic AI の要素)
 
 LLM ベースで以下 5 つの判断を実行する。Multi-Agent Orchestration を Azure AI Foundry で実装する。
