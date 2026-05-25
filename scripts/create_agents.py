@@ -20,13 +20,22 @@ from __future__ import annotations
 import os
 import sys
 from dataclasses import dataclass
+from pathlib import Path
+
+# scripts/ から実行された際にリポジトリルートを sys.path に追加して src を import 可能にする
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from azure.ai.agents import AgentsClient
-from azure.ai.agents.models import ConnectedAgentTool  # pyright: ignore[reportPrivateImportUsage]
+from azure.ai.agents.models import (
+    ConnectedAgentTool,  # pyright: ignore[reportPrivateImportUsage]
+)
 from azure.identity import AzureCliCredential
+from dotenv import load_dotenv
 
 from src.agents import collector, matcher, observer, proposer
 from src.agents import orchestrator as orch_module
+
+load_dotenv()
 
 ENDPOINT = os.environ.get("PROJECT_ENDPOINT", "").strip()
 MODEL_DEPLOYMENT = os.environ.get("MODEL_DEPLOYMENT", "gpt-4o").strip()
