@@ -1,0 +1,84 @@
+"""Foundry FunctionTool に登録するためのラッパー関数群。
+
+src/tools/cosmos_io.py 等の Python 内部 API は dataclass を返すが、
+Foundry FunctionTool は JSON シリアライズ可能な値 (dict/list/プリミティブ) を要求する。
+ここで dataclass → dict 変換を吸収し、Foundry から呼べる薄いラッパーとして提供する。
+
+Orchestrator はこれらの関数を function_tool 経由で呼び出す。
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict
+
+from src.tools.cosmos_io import (
+    PainPoint,
+    fetch_success_cases,
+    save_pain_point,
+)
+from src.tools.graph_observe import fetch_signals
+from src.tools.search_query import semantic_search
+
+
+def tool_fetch_signals(user_id: str, since_iso: str | None = None) -> list[dict]:
+    """観測対象ユーザーの最近の困りごとシグナルを取得する。
+
+    :param user_id: 観測対象の内部 ID
+    :param since_iso: この時刻以降の発話のみ取得 (省略時は直近 1 時間)
+    :return: シグナル候補のリスト
+    """
+    return [asdict(s) for s in fetch_signals(user_id=user_id, since_iso=since_iso)]
+
+
+def tool_save_pain_point(
+    user_id: str,
+    business_context: str,
+    pain_description: str,
+    source_signal: str,
+) -> dict:
+    """本人承認済みの困りごとを Cosmos DB に永続化する。
+
+    :param user_id: 困りごとを持つユーザー ID
+    :param business_context: 業務文脈 (例: 月次レポート作成)
+    :param pain_description: 具体的な困りごとの説明
+    :param source_signal: 検知元シグナル種別 (teams_message 等)
+    :return: 保存された PainPoint の id を含む dict
+    """
+    pp = PainPoint(
+        user_id=user_id,
+        business_context=business_context,
+        pain_description=pain_description,
+        source_signal=source_signal,
+    )
+    saved_id = save_pain_point(pp)
+    return {"id": saved_id, "status": pp.status}
+
+
+def tool_semantic_search(text: str, top_k: int = 3) -> list[dict]:
+    """困りごとテキストから類似成功事例を検索する。
+
+    :param text: クエリ (困りごとの自然文)
+    :param top_k: 上位何件を返すか
+    :return: SearchHit のリスト (score 降順)
+    """
+    return [asdict(h) for h in semantic_search(text=text, top_k=top_k)]
+
+
+def tool_fetch_success_cases(case_ids: list[str]) -> list[dict]:
+    """指定 ID の成功事例を取得する。
+
+    :param case_ids: 取得対象の case_id のリスト
+    :return: SuccessCase のリスト
+    """
+    return [asdict(c) for c in fetch_success_cases(case_ids=case_ids)]
+
+
+# Foundry の FunctionTool に渡す関数セット。
+# Orchestrator がこれらすべてを保有し、ConnectedAgentTool 経由で子 Agent を呼びつつ
+# 自身も直接データ層を操作する設計。
+ORCHESTRATOR_FUNCTIONS = {
+    tool_fetch_signals,
+    tool_save_pain_point,
+    tool_semantic_search,
+    tool_fetch_success_cases,
+}

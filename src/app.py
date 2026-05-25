@@ -16,9 +16,16 @@ import os
 
 import chainlit as cl
 from azure.ai.agents import AgentsClient
-from azure.ai.agents.models import MessageRole, MessageTextContent
+from azure.ai.agents.models import (
+    FunctionTool,  # pyright: ignore[reportPrivateImportUsage]
+    MessageRole,
+    MessageTextContent,
+    ToolSet,  # pyright: ignore[reportPrivateImportUsage]
+)
 from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
+
+from src.tools.registry import ORCHESTRATOR_FUNCTIONS
 
 load_dotenv()
 
@@ -33,6 +40,13 @@ _agents = AgentsClient(
     endpoint=PROJECT_ENDPOINT,
     credential=DefaultAzureCredential(),
 )
+
+# Orchestrator が function tool を呼ぶ際、ローカル Python の tool_* 関数を実行するための ToolSet。
+# ConnectedAgentTool は Foundry 内部で処理されるため、ToolSet には FunctionTool のみ登録する。
+_function_tool = FunctionTool(functions=ORCHESTRATOR_FUNCTIONS)
+_toolset = ToolSet()
+_toolset.add(_function_tool)
+_agents.enable_auto_function_calls(_toolset)
 
 
 @cl.on_chat_start
@@ -59,6 +73,7 @@ async def on_message(message: cl.Message) -> None:
     run = _agents.runs.create_and_process(
         thread_id=thread_id,
         agent_id=AGENT_ID,
+        toolset=_toolset,
     )
 
     if run.status == "failed":

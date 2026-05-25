@@ -28,12 +28,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from azure.ai.agents import AgentsClient
 from azure.ai.agents.models import (
     ConnectedAgentTool,  # pyright: ignore[reportPrivateImportUsage]
+    FunctionTool,  # pyright: ignore[reportPrivateImportUsage]
 )
 from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 
 from src.agents import collector, matcher, observer, proposer
 from src.agents import orchestrator as orch_module
+from src.tools.registry import ORCHESTRATOR_FUNCTIONS
 
 load_dotenv()
 
@@ -66,6 +68,26 @@ CHILD_AGENTS: list[ChildAgentSpec] = [
 ]
 
 
+MANAGED_AGENT_NAMES = {
+    orch_module.NAME,
+    observer.NAME,
+    collector.NAME,
+    matcher.NAME,
+    proposer.NAME,
+}
+
+
+def _delete_existing(client: AgentsClient) -> None:
+    """同名の既存 Agent を削除する (再実行時の冪等性確保)。
+
+    business-agent 等、本スクリプト管理外の Agent は触らない。
+    """
+    for agent in client.list_agents():
+        if agent.name in MANAGED_AGENT_NAMES:
+            client.delete_agent(agent.id)
+            sys.stderr.write(f"deleted existing agent: {agent.name} ({agent.id})\n")
+
+
 def main() -> int:
     if not ENDPOINT:
         sys.stderr.write("PROJECT_ENDPOINT が空です\n")
@@ -73,9 +95,12 @@ def main() -> int:
 
     client = AgentsClient(endpoint=ENDPOINT, credential=AzureCliCredential())
 
+    # 0. 同名の既存 Agent を削除 (冪等性)
+    _delete_existing(client)
+
     # 1. 子 Agent を順次作成
     child_ids: dict[str, str] = {}
-    child_tools: list = []
+    connected_tools: list = []
     for spec in CHILD_AGENTS:
         created = client.create_agent(
             model=MODEL_DEPLOYMENT,
@@ -90,18 +115,22 @@ def main() -> int:
             name=spec.name,
             description=spec.description,
         )
-        child_tools.extend(connected.definitions)
+        connected_tools.extend(connected.definitions)
 
-    # 2. Orchestrator を子 Agent を ConnectedAgentTool として登録した上で作成
+    # 2. Orchestrator に渡す tools を合成 (ConnectedAgentTool + FunctionTool)
+    function_tool = FunctionTool(functions=ORCHESTRATOR_FUNCTIONS)
+    orchestrator_tools = connected_tools + function_tool.definitions
+
+    # 3. Orchestrator を作成
     orchestrator_agent = client.create_agent(
         model=MODEL_DEPLOYMENT,
         name=orch_module.NAME,
         instructions=orch_module.INSTRUCTIONS,
-        tools=child_tools,
+        tools=orchestrator_tools,
     )
     sys.stderr.write(f"created orchestrator: {orch_module.NAME} ({orchestrator_agent.id})\n")
 
-    # 3. .env 転記用に標準出力
+    # 4. .env 転記用に標準出力
     print(f"AGENT_ID={orchestrator_agent.id}")
     print(f"AGENT_ID_OBSERVER={child_ids[observer.NAME]}")
     print(f"AGENT_ID_COLLECTOR={child_ids[collector.NAME]}")
