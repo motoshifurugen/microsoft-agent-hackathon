@@ -1,0 +1,72 @@
+[
+  {
+    "user_id": "u-sato-001",
+    "business_type": "月次レポート作成",
+    "what_worked": "Copilot for M365 で前月データを Excel に貼り、要約と推移グラフ生成を依頼するプロンプトテンプレを使った",
+    "why_worked": "数値集計と説明文生成という反復作業のうち、説明文部分が Copilot に置換可能だった",
+    "reproducibility_score": 0.9
+  },
+  {
+    "user_id": "u-yamada-002",
+    "business_type": "月次レポート作成",
+    "what_worked": "前月比/前年比の異常値を自動検出するプロンプトを 3 行で書き、Copilot に投げてから人がレビューする手順に変えた",
+    "why_worked": "異常値検出は機械が得意、最終解釈は人が得意という分担が明確になった",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-tanaka-003",
+    "business_type": "提案書作成",
+    "what_worked": "顧客の課題ヒアリングメモを貼り付け、Copilot に『3 つの解決策と費用感の比較表を作って』と指示してドラフトを得た",
+    "why_worked": "比較表という構造が決まったアウトプットは LLM が高速に量産できる",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-kimura-004",
+    "business_type": "議事録要約",
+    "what_worked": "Teams 会議の文字起こしを Copilot に渡し、決定事項・アクションアイテム・宿題の 3 セクション構造で要約させた",
+    "why_worked": "会議要約のフォーマットを固定化したことで毎回の品質が安定した",
+    "reproducibility_score": 0.95
+  },
+  {
+    "user_id": "u-suzuki-005",
+    "business_type": "議事録要約",
+    "what_worked": "話者ごとの発言を時系列に並べ、アクションアイテムだけを抽出するプロンプトを用意した",
+    "why_worked": "情報密度の低い雑談部分を捨て、決定とタスクだけを残せた",
+    "reproducibility_score": 0.9
+  },
+  {
+    "user_id": "u-ito-006",
+    "business_type": "メール作成",
+    "what_worked": "顧客向けの謝罪メールやフォローアップは Copilot に過去類例メールを 1 通渡して『同じトーンで』と依頼した",
+    "why_worked": "トーン継承のための類例 1 通が、ゼロから書くより 10 倍速かった",
+    "reproducibility_score": 0.75
+  },
+  {
+    "user_id": "u-watanabe-007",
+    "business_type": "コードレビュー",
+    "what_worked": "GitHub Copilot に diff を貼り、レビュー観点 (セキュリティ/性能/可読性) を明示してチェックリスト化した",
+    "why_worked": "観点を先に与えると見落としが減る。観点なしで質問するとぼんやりした回答になる",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-takahashi-008",
+    "business_type": "経費精算チェック",
+    "what_worked": "領収書 PDF を Copilot で OCR + 金額抜き出し → 経費規程の閾値チェックを自動化",
+    "why_worked": "領収書の構造化と規程突合という単純作業を機械化できた",
+    "reproducibility_score": 0.7
+  },
+  {
+    "user_id": "u-nakamura-009",
+    "business_type": "提案書作成",
+    "what_worked": "既存提案書 3 つを Copilot に読ませ、新規顧客向けに差分を埋めるテンプレ生成プロンプトを使った",
+    "why_worked": "ゼロから書くのではなく既存資産の流用ベースに変えたことで初速が出た",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-kobayashi-010",
+    "business_type": "月次レポート作成",
+    "what_worked": "Copilot に SQL 結果の CSV を渡し、Markdown 形式の表とコメントを生成させてから Notion に貼った",
+    "why_worked": "データから文書への変換を 1 プロンプトで完結させた",
+    "reproducibility_score": 0.85
+  }
+]
