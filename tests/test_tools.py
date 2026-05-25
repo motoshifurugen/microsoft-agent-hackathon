@@ -12,6 +12,7 @@ import pytest
 from src.tools.cosmos_io import (
     PainPoint,
     SuccessCase,
+    _embeddings,
     _success_cases,
     fetch_success_cases,
     save_pain_point,
@@ -23,10 +24,12 @@ from src.tools.search_query import semantic_search
 
 @pytest.fixture(autouse=True)
 def _reset_in_memory_store() -> Iterator[None]:
-    """テストごとに in-memory store をクリアする。"""
+    """テストごとに in-memory store と embedding キャッシュをクリアする。"""
     _success_cases.clear()
+    _embeddings.clear()
     yield
     _success_cases.clear()
+    _embeddings.clear()
 
 
 class TestPainPoint:

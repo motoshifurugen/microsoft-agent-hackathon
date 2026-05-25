@@ -61,7 +61,8 @@ def tool_semantic_search(text: str, top_k: int = 3) -> list[dict]:
     :param top_k: 上位何件を返すか
     :return: SearchHit のリスト (score 降順)
     """
-    return [asdict(h) for h in semantic_search(text=text, top_k=top_k)]
+    # Foundry function tool 経由では数値が文字列で届くことがあるため明示的にキャスト
+    return [asdict(h) for h in semantic_search(text=text, top_k=int(top_k))]
 
 
 def tool_fetch_success_cases(case_ids: list[str]) -> list[dict]:

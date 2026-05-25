@@ -43,6 +43,9 @@ class SuccessCase:
 # MVP: in-memory ストア。データ担当の実装で Cosmos DB に差し替え。
 _pain_points: dict[str, dict] = {}
 _success_cases: dict[str, dict] = {}
+# 成功事例 ID → embedding ベクトル。seed 時に register_embedding で投入される。
+# 本実装では Azure AI Search の index に置き換える前提。
+_embeddings: dict[str, list[float]] = {}
 
 
 def save_pain_point(pain_point: PainPoint) -> str:
@@ -83,3 +86,16 @@ def seed_success_case(case: SuccessCase) -> str:
     """
     _success_cases[case.id] = asdict(case)
     return case.id
+
+
+def register_embedding(case_id: str, vector: list[float]) -> None:
+    """成功事例 ID に対する embedding ベクトルを登録する。
+
+    本実装では Azure AI Search の index push に置き換える前提。
+    """
+    _embeddings[case_id] = vector
+
+
+def has_embeddings() -> bool:
+    """1 件以上の embedding が登録されているか。"""
+    return bool(_embeddings)

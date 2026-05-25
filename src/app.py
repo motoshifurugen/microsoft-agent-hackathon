@@ -26,8 +26,13 @@ from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
 
 from src.tools.registry import ORCHESTRATOR_FUNCTIONS
+from src.tools.seed import load_success_cases
 
 load_dotenv()
+
+# 起動時に in-memory store へダミー成功事例を投入し、embedding も計算する。
+# データ担当の Cosmos DB + Azure AI Search 本実装が来たらこの呼び出しは不要になる。
+_seeded_count = load_success_cases(with_embeddings=True)
 
 PROJECT_ENDPOINT = os.environ.get("PROJECT_ENDPOINT", "").strip()
 AGENT_ID = os.environ.get("AGENT_ID", "").strip()
