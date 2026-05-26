@@ -22,9 +22,9 @@ from azure.ai.agents.models import (
     MessageTextContent,
     ToolSet,  # pyright: ignore[reportPrivateImportUsage]
 )
-from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
 
+from src.tools.credential import get_default_credential
 from src.tools.registry import ORCHESTRATOR_FUNCTIONS
 from src.tools.seed import load_success_cases
 
@@ -43,7 +43,7 @@ if not PROJECT_ENDPOINT or not AGENT_ID:
 
 _agents = AgentsClient(
     endpoint=PROJECT_ENDPOINT,
-    credential=DefaultAzureCredential(),
+    credential=get_default_credential(),
 )
 
 # Orchestrator が function tool を呼ぶ際、ローカル Python の tool_* 関数を実行するための ToolSet。

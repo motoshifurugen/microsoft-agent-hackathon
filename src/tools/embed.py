@@ -11,8 +11,10 @@ import os
 from collections.abc import Sequence
 from urllib.parse import urlparse
 
-from azure.identity import AzureCliCredential, get_bearer_token_provider
+from azure.identity import get_bearer_token_provider
 from openai import AzureOpenAI
+
+from src.tools.credential import get_default_credential
 
 _AAD_SCOPE = "https://cognitiveservices.azure.com/.default"
 _API_VERSION = "2024-02-01"
@@ -41,7 +43,8 @@ def _get_client() -> AzureOpenAI:
     """Lazy に AzureOpenAI client を初期化して返す。"""
     global _client
     if _client is None:
-        token_provider = get_bearer_token_provider(AzureCliCredential(), _AAD_SCOPE)
+        # ローカル (環境変数/VSCode) + Container Apps (Managed Identity) 両対応
+        token_provider = get_bearer_token_provider(get_default_credential(), _AAD_SCOPE)
         _client = AzureOpenAI(
             azure_endpoint=_build_openai_endpoint(),
             api_version=_API_VERSION,
