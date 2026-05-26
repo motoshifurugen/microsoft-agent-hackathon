@@ -108,7 +108,16 @@ az containerapp create \
         └── ci.yml           # ruff + pyright + pytest
 ```
 
-詳細な Azure リソース構築手順と現状は [`docs/azure-setup.md`](docs/azure-setup.md) を参照。
+### ドキュメント
+
+| 用途 | ファイル |
+|---|---|
+| プロジェクト現状サマリ | [`docs/status.md`](docs/status.md) |
+| アーキテクチャ + Mermaid シーケンス図 | [`docs/architecture.md`](docs/architecture.md) |
+| 運用・再デプロイ・トラブル対処 | [`docs/operations.md`](docs/operations.md) |
+| 要件定義書 | [`docs/requirements.md`](docs/requirements.md) |
+| Azure リソース初期構築 | [`docs/azure-setup.md`](docs/azure-setup.md) |
+| ダミー成功事例データ | [`docs/sample_data/success_cases.json`](docs/sample_data/success_cases.json) |
 
 ---
 
