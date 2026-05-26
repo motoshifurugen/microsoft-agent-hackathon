@@ -18,6 +18,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # アプリ本体
 COPY src/ ./src/
 COPY README.md ./
+# 起動時 seed が読む JSON データ (data 担当の本実装が来たら不要)
+COPY docs/sample_data ./docs/sample_data
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
@@ -31,6 +33,7 @@ COPY --from=builder /app /app
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
     PORT=8000
 
 EXPOSE 8000
