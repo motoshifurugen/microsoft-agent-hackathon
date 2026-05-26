@@ -32,7 +32,9 @@ class TestLooksLikePain:
     def test_pain_keywords_match(self, text: str) -> None:
         assert _looks_like_pain(text) is True
 
-    @pytest.mark.parametrize("text", ["", "今日は晴れです", "完了しました", "ご対応ありがとうございます"])
+    @pytest.mark.parametrize(
+        "text", ["", "今日は晴れです", "完了しました", "ご対応ありがとうございます"]
+    )
     def test_non_pain_text(self, text: str) -> None:
         assert _looks_like_pain(text) is False
 
@@ -96,7 +98,11 @@ class TestFetchSignals:
             graph_observe,
             "_fetch_recent_messages",
             lambda user_id, token, top=25: [
-                {"subject": "今日のミーティング", "bodyPreview": "アジェンダ確認", "receivedDateTime": "2026-05-26T10:00:00Z"}
+                {
+                    "subject": "今日のミーティング",
+                    "bodyPreview": "アジェンダ確認",
+                    "receivedDateTime": "2026-05-26T10:00:00Z",
+                }
             ],
         )
         signals = fetch_signals("u-1")
