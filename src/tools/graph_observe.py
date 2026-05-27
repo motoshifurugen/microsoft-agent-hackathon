@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Literal
+from urllib.parse import quote
 
 import httpx
 from azure.core.exceptions import ClientAuthenticationError
@@ -78,7 +79,7 @@ def _fetch_recent_messages(user_id: str, token: str, top: int = 25) -> list[dict
     """
     headers = {"Authorization": f"Bearer {token}"}
     select_fields = "id,subject,bodyPreview,receivedDateTime"
-    url = f"{GRAPH_BASE}/users/{user_id}/messages?$top={top}&$select={select_fields}&$orderby=receivedDateTime desc"
+    url = f"{GRAPH_BASE}/users/{quote(user_id, safe='')}/messages?$top={top}&$select={select_fields}&$orderby=receivedDateTime desc"
     try:
         response = httpx.get(url, headers=headers, timeout=10.0)
         response.raise_for_status()

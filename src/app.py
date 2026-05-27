@@ -12,8 +12,6 @@ Orchestrator が ConnectedAgentTool で 4 子 Agent (observer / collector / matc
 
 from __future__ import annotations
 
-import os
-
 import chainlit as cl
 from azure.ai.agents import AgentsClient
 from azure.ai.agents.models import (
@@ -24,25 +22,25 @@ from azure.ai.agents.models import (
 )
 from dotenv import load_dotenv
 
+from src.config import load_settings
 from src.tools.credential import get_default_credential
 from src.tools.registry import ORCHESTRATOR_FUNCTIONS
 from src.tools.seed import load_success_cases
 
 load_dotenv()
 
-# 起動時に in-memory store へダミー成功事例を投入し、embedding も計算する。
+# 環境変数チェックを最初に行い、欠落時は即発見させる。
+# Azure I/O (embedding 計算など) より先に実行することで、
+# 認証エラーが env var エラーを隠蔽する問題を防ぐ。
+_settings = load_settings()
+
+# 起動時に in-memory store へダミー成功事例を投入する。
+# embedding 計算は起動時の Azure 依存を避けるため with_embeddings=False。
 # データ担当の Cosmos DB + Azure AI Search 本実装が来たらこの呼び出しは不要になる。
-_seeded_count = load_success_cases(with_embeddings=True)
-
-PROJECT_ENDPOINT = os.environ.get("PROJECT_ENDPOINT", "").strip()
-AGENT_ID = os.environ.get("AGENT_ID", "").strip()
-
-if not PROJECT_ENDPOINT or not AGENT_ID:
-    # 起動時に欠落を即発見させる。Chainlit ログに警告が出る
-    raise RuntimeError("PROJECT_ENDPOINT と AGENT_ID を .env または環境変数で設定してください")
+_seeded_count = load_success_cases(with_embeddings=False)
 
 _agents = AgentsClient(
-    endpoint=PROJECT_ENDPOINT,
+    endpoint=_settings.project_endpoint,
     credential=get_default_credential(),
 )
 
@@ -77,7 +75,7 @@ async def on_message(message: cl.Message) -> None:
 
     run = _agents.runs.create_and_process(
         thread_id=thread_id,
-        agent_id=AGENT_ID,
+        agent_id=_settings.agent_ids.orchestrator,
         toolset=_toolset,
     )
 

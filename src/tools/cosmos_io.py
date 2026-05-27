@@ -29,7 +29,11 @@ class PainPoint:
 
 @dataclass(frozen=True)
 class SuccessCase:
-    """成功事例データ (要件定義書 §6.1 `success_cases` コンテナ)。"""
+    """成功事例データ (要件定義書 §6.1 `success_cases` コンテナ)。
+
+    owner_label / concrete_prompt / quantitative_effect は提示時の現実感と
+    具体性を高めるためのフィールドで、本実装 (Cosmos DB) でも同じスキーマで保存する。
+    """
 
     user_id: str
     business_type: str
@@ -38,6 +42,9 @@ class SuccessCase:
     reproducibility_score: float  # 0.0-1.0
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     embedding_id: str | None = None
+    owner_label: str = ""  # 例: "営業部 佐藤さん"
+    concrete_prompt: str = ""  # ユーザーがコピペできる実プロンプト
+    quantitative_effect: str = ""  # 例: "月 8h → 2.5h (約 70% 削減)"
 
 
 # MVP: in-memory ストア。データ担当の実装で Cosmos DB に差し替え。
@@ -99,3 +106,13 @@ def register_embedding(case_id: str, vector: list[float]) -> None:
 def has_embeddings() -> bool:
     """1 件以上の embedding が登録されているか。"""
     return bool(_embeddings)
+
+
+def get_all_embeddings() -> dict[str, list[float]]:
+    """全 embedding を返す (テスト・検索エンジンからのアクセス用)。"""
+    return _embeddings
+
+
+def get_all_success_cases() -> dict[str, dict]:
+    """全成功事例を返す (テスト・検索エンジンからのアクセス用)。"""
+    return _success_cases

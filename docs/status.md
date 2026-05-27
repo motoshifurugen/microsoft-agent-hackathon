@@ -75,6 +75,56 @@ Orchestrator の自律実行 (Run Steps):
 | 学習ループ (F-5) | 簡易ログのみ | 戦略選択の重み自動更新 |
 | 認証 (ユーザー側) | 無し (公開 URL) | Entra ID SSO |
 | レビューモード | 未実装 | 承認者向け要約と観点 |
+| 成功事例の収集 | 手動 (JSON 編集 or DX 推進部のフォーム想定) | **半自動収集ループ** (§4.1 参照) |
+| 本人 vs 推薦先 | 検索結果に対象ユーザー本人の事例も含まれうる | semantic_search に `exclude_user_id` を追加 |
+
+### 4.1 成功事例の半自動収集 (Phase 2 設計)
+
+サービスのコア価値は「組織知の継続蓄積」であり、その肝が **成功事例の入手経路** です。
+現状は DX 推進部の手動入力 (§2.2 サブシナリオ) を想定していますが、これは
+スケールしません。Phase 2 で以下のループを実装する想定:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Orch as Orchestrator
+    participant U as ユーザー (田中さん)
+    participant DB as success_cases
+    participant Sched as スケジューラ (Phase 2)
+
+    Note over Orch,U: Day 1: 戦略 A 採用、佐藤さんを紹介
+    Orch->>U: 戦略 A 提示 → 採用
+    Sched->>Sched: 7 日後の follow-up を予約
+
+    Note over Sched,U: Day 8: フォローアップ
+    Sched->>Orch: 田中さんへフォローアップ起動
+    Orch->>U: 「先日の月次レポート、佐藤さんのテンプレ使ってみてどうでしたか？」
+    U->>Orch: 「8h → 2.5h になった」
+    Orch->>Orch: 新たな成功事例候補と判断
+    Orch->>U: 「これは組織知として共有していいですか？プロンプトもそのまま使ってよい？」
+    U->>Orch: 承認
+    Orch->>DB: 新 SuccessCase を保存 (owner_label=田中さん, ...)
+    Orch->>DB: embedding 計算して索引追加
+```
+
+**実装に必要な要素 (Phase 2)**:
+
+1. **スケジューラ**: Azure Functions Timer trigger or Power Automate Schedule
+   で、戦略採用後 N 日後にフォローアップを起動
+2. **追跡 DB**: `match_history` コンテナに `follow_up_due_at`, `outcome_captured` フィールドを追加
+3. **新規 tool**: `tool_initiate_followup(match_id)` を Orchestrator が呼べるよう登録
+4. **本人承認 UI**: Teams Adaptive Card で「(yes / no / 編集)」を返せる
+5. **匿名化オプション**: owner_label を「経理部のあるメンバー」に置換するオプション
+
+これにより、伝播が成功するたびに事例が自動で 1 件増える「正のフィードバックループ」を作り、
+組織知の蓄積速度を組織サイズに対して線形以上にスケールさせる。
+
+### 4.2 本人事例の除外 (軽微な改善)
+
+現状 `tool_semantic_search` は対象ユーザー本人の事例も結果に含めうる。
+Phase 2 では引数に `exclude_user_id` を追加し、`_string_match_search` / `_embedding_search` の
+両方でフィルタを適用する。Orchestrator instructions にも「対象ユーザー本人の事例は除外する」
+を追記する。
 
 ---
 
@@ -102,6 +152,8 @@ Azure 実 API には接続せず、`monkeypatch` でモック化。CI は GitHub
 | #4 | seed data 10 件 + embedding ベース semantic_search |
 | #5 | Container Apps デプロイ (公開 URL 化) + Managed Identity |
 | #6 | Microsoft Graph 統合 (Mail.Read application permission) |
+| #7 | docs (architecture / operations / status) |
+| #8 | フィードバック反映 (具体的プロンプト + 戦略 A/B 強制 + owner ラベル + Teams 投稿トリガー判断) |
 
 すべて main にマージ済み (本ドキュメントの PR を除く)。
 

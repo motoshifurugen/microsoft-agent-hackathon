@@ -46,3 +46,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Playwright MCP のページスナップショット (ローカル検証用)
+.playwright-mcp/
