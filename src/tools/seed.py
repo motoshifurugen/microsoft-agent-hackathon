@@ -1,4 +1,4 @@
-"""JSON ファイルからダミー成功事例を in-memory store に投入する。
+"""JSON ファイルからダミーデータを in-memory store に投入する。
 
 src/app.py の起動時に呼び出されることを想定。
 データ担当の本実装 (Cosmos DB) に差し替えるまでの暫定 RAG ソース。
@@ -9,10 +9,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.tools.cosmos_io import SuccessCase, register_embedding, seed_success_case
+from src.tools.cosmos_io import (
+    ColdStartTemplate,
+    SuccessCase,
+    register_embedding,
+    seed_cold_start_template,
+    seed_success_case,
+)
 
 DEFAULT_SEED_PATH = (
     Path(__file__).resolve().parents[2] / "docs" / "sample_data" / "success_cases.json"
+)
+DEFAULT_TEMPLATE_PATH = (
+    Path(__file__).resolve().parents[2] / "docs" / "sample_data" / "cold_start_templates.json"
 )
 
 
@@ -82,6 +91,64 @@ def load_success_cases(path: Path | None = None, with_embeddings: bool = False) 
         if with_embeddings and embed_text is not None:
             vector = embed_text(_build_embedding_text(case))
             register_embedding(case.id, vector)
+        count += 1
+
+    return count
+
+
+def load_cold_start_templates(path: Path | None = None) -> int:
+    """JSON から ColdStartTemplate を読み込み、in-memory store に投入する。
+
+    Args:
+        path: JSON ファイルのパス。None の場合 docs/sample_data/cold_start_templates.json を使用。
+
+    Returns:
+        投入された件数。
+
+    Raises:
+        FileNotFoundError: 指定パスが存在しない場合。
+        ValueError: JSON が ColdStartTemplate の必須フィールドを欠く場合。
+    """
+    tpl_path = path or DEFAULT_TEMPLATE_PATH
+    if not tpl_path.exists():
+        raise FileNotFoundError(f"template file not found: {tpl_path}")
+
+    raw = json.loads(tpl_path.read_text(encoding="utf-8"))
+    if not isinstance(raw, list):
+        raise ValueError(f"template file must be a JSON array, got {type(raw).__name__}")
+
+    required = {
+        "business_category",
+        "title",
+        "description",
+        "common_pain",
+        "prompt",
+        "steps",
+        "suitable_for",
+        "cautions",
+        "feedback_question",
+    }
+
+    count = 0
+    for entry in raw:
+        if not isinstance(entry, dict):
+            raise ValueError(f"each entry must be an object, got {type(entry).__name__}")
+        missing = required - entry.keys()
+        if missing:
+            raise ValueError(f"template entry missing required fields: {missing}")
+
+        template = ColdStartTemplate(
+            business_category=entry["business_category"],
+            title=entry["title"],
+            description=entry["description"],
+            common_pain=entry["common_pain"],
+            prompt=entry["prompt"],
+            steps=list(entry["steps"]),
+            suitable_for=entry["suitable_for"],
+            cautions=entry["cautions"],
+            feedback_question=entry["feedback_question"],
+        )
+        seed_cold_start_template(template)
         count += 1
 
     return count
