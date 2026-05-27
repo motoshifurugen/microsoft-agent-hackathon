@@ -128,6 +128,56 @@ graph LR
 
 ## 3. メインシナリオのシーケンス
 
+Orchestrator が判断する入力パターンは 2 種類ある。どちらも最終的に
+「最大 3 件の事例 + 戦略 A/B」というフォーマットに収束する。
+
+### 3.1 パターン A: 能動的な検索依頼
+
+「○○さんに合う事例を探して」のような、検索意図が明確な発話。
+Orchestrator は本人 user_id を抽出して **`exclude_user_id`** に渡し、
+本人の事例が自己推薦されることを防ぐ。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as ユーザー (ブラウザ)
+    participant Chainlit as Chainlit (Container Apps)
+    participant Orch as Orchestrator Agent
+    participant LLM as Azure OpenAI gpt-4o
+    participant Tool as Function Tool (Python)
+    participant Embed as text-embedding-3-small
+    participant Mem as in-memory store
+
+    Note over Chainlit: 起動時に load_success_cases(with_embeddings=True)<br/>10 件の SuccessCase + 1536 次元 embedding を投入
+    User->>Chainlit: 「経費精算で困っている高橋さんに合う事例を 3 件」
+    Chainlit->>Orch: thread/run.create_and_process(toolset)
+    Orch->>LLM: 意図解釈 (パターン A と判定)
+    LLM-->>Orch: tool_semantic_search 呼び出し計画 (本人 user_id を exclude)
+    Orch->>Tool: tool_semantic_search(text=..., top_k=3, exclude_user_id="u-takahashi-008")
+    Tool->>Embed: クエリを埋め込みベクトルに変換
+    Embed-->>Tool: query_vec[1536]
+    loop 各 success_case
+        Tool->>Mem: case の embedding を取得
+        Mem-->>Tool: case_vec[1536]
+        Tool->>Tool: _should_exclude(case, "u-takahashi-008") をチェック
+        alt 本人の事例
+            Tool->>Tool: スキップ
+        else 他者の事例
+            Tool->>Tool: _final_score = cosine × 0.7 + reproducibility × 0.3 + business_type_bonus
+        end
+    end
+    Tool-->>Orch: SearchHit[] (score 降順, 最大 3 件)
+    Orch->>LLM: 上位 3 件で回答生成 + 戦略 A/B 提示
+    LLM-->>Orch: 自然言語回答 (owner_label / concrete_prompt / quantitative_effect を含む)
+    Orch-->>Chainlit: run.status=COMPLETED
+    Chainlit-->>User: 「営業部 佐藤さんの事例...」+ 戦略 A/B を表示
+```
+
+### 3.2 パターン B: Teams 投稿トリガー (自律判断)
+
+ユーザーが観測情報を引用する発話 (「○○さんが Teams にこう投稿した」)。
+Orchestrator は **支援要否を自分で判断** し、必要なら能動的に検索 → 提案まで進める。
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -140,35 +190,49 @@ sequenceDiagram
     participant Embed as text-embedding-3-small
     participant Mem as in-memory store
 
-    Note over Chainlit: 起動時に load_success_cases(with_embeddings=True)<br/>10 件の SuccessCase + embedding を投入
-    User->>Chainlit: 「田中さんの月次レポート困りごとに合う成功事例を探して」
+    User->>Chainlit: 「田中さんが『月次レポート、また 8 時間か…』と Teams 投稿。支援が必要か判断して」
     Chainlit->>Orch: thread/run.create_and_process(toolset)
-    Orch->>LLM: 意図解釈 + tool 呼び出し計画
-    LLM-->>Orch: tool_fetch_signals 呼び出し
+    Orch->>LLM: 意図解釈 (パターン B と判定)
+    LLM-->>Orch: まず tool_fetch_signals で観測補完
     Orch->>Tool: tool_fetch_signals(user_id=tanaka)
     Tool->>Graph: GET /users/{id}/messages (Mail.Read app perm)
-    alt 困りごとメールがある
+    alt 困りごとメールあり
         Graph-->>Tool: messages[]
         Tool->>Tool: キーワードマッチで pain を抽出
-    else 該当なし / 認証失敗
+    else 該当なし / 権限エラー
         Tool->>Tool: _mock_signal() でデモ用シグナル生成
     end
-    Tool-->>Orch: [Signal(business_context_hint="月次レポート", ...)]
-    Orch->>LLM: 次の tool を決定
-    LLM-->>Orch: tool_semantic_search 呼び出し
-    Orch->>Tool: tool_semantic_search(text="月次レポート ...", top_k=3)
-    Tool->>Embed: クエリを埋め込みベクトルに変換
-    Embed-->>Tool: query_vec[1536]
-    Tool->>Mem: 全 success_cases の embedding と cosine similarity
-    Mem-->>Tool: Top-N candidates
-    Tool-->>Orch: [SearchHit(case_id, score, snippet), ...]
-    Orch->>LLM: ユーザー向け回答生成 + 戦略 A/B 提示
-    LLM-->>Orch: 自然言語回答
-    Orch-->>Chainlit: 完了 (run.status=COMPLETED)
-    Chainlit-->>User: 戦略 A (直接紹介) / B (テンプレ送付) の選択肢を表示
+    Tool-->>Orch: Signal[]
+    Orch->>LLM: 引用 + Signal を統合して「支援要否」を判断
+    alt 支援必要と判断
+        LLM-->>Orch: tool_semantic_search 呼び出し (exclude_user_id=tanaka)
+        Orch->>Tool: tool_semantic_search(text=..., top_k=3, exclude_user_id=tanaka)
+        Tool->>Embed: クエリ embedding
+        Tool->>Mem: cosine similarity + 重み付けで Top 3
+        Tool-->>Orch: SearchHit[]
+        Orch->>LLM: 3 件 + 戦略 A/B で回答生成
+        LLM-->>Orch: 自然言語回答
+    else 不要と判断
+        LLM-->>Orch: 「現時点では介入不要」の短い説明
+    end
+    Orch-->>Chainlit: run.status=COMPLETED
+    Chainlit-->>User: 提案 or 介入不要メッセージ
 ```
 
-### 自律ループの停止条件
+### 3.3 スコアリング詳細
+
+`tool_semantic_search` の最終スコア:
+
+```
+final_score = (cosine_similarity * SEMANTIC_WEIGHT)        # 0.7
+            + (reproducibility_score * REPRODUCIBILITY_WEIGHT)  # 0.3
+            + (BUSINESS_TYPE_BONUS if business_type in query else 0)  # +0.2
+```
+
+定数はすべて `src/tools/search_query.py` の冒頭にまとめてあり、
+チューニングは数値変更だけで完結する。
+
+### 3.4 自律ループの停止条件
 
 - 全テンプレ項目が埋まった
 - ユーザーにしか聞けない情報が残り、確認質問を発した
