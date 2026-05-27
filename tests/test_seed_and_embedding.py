@@ -203,3 +203,149 @@ class TestSemanticSearchEmbeddingMode:
         # 文字列マッチへフォールバックして空でない結果が返る
         hits = semantic_search("月次レポートで困っている")
         assert len(hits) >= 1
+
+
+class TestEnrichedFields:
+    """SuccessCase の新フィールド (owner_label / concrete_prompt / quantitative_effect) のテスト。"""
+
+    def test_load_with_enriched_fields(self, tmp_path: Path) -> None:
+        seed_data = [
+            {
+                "user_id": "u-sato",
+                "business_type": "月次レポート作成",
+                "what_worked": "Copilot で雛形生成",
+                "why_worked": "テンプレ化が効いた",
+                "reproducibility_score": 0.9,
+                "owner_label": "営業部 佐藤さん",
+                "concrete_prompt": "添付の Excel から...",
+                "quantitative_effect": "月 8h → 2.5h",
+            }
+        ]
+        seed_file = tmp_path / "seed.json"
+        seed_file.write_text(json.dumps(seed_data), encoding="utf-8")
+
+        load_success_cases(path=seed_file, with_embeddings=False)
+
+        assert len(_success_cases) == 1
+        case_id = next(iter(_success_cases.keys()))
+        case = _success_cases[case_id]
+        assert case["owner_label"] == "営業部 佐藤さん"
+        assert case["concrete_prompt"].startswith("添付の Excel")
+        assert case["quantitative_effect"] == "月 8h → 2.5h"
+
+    def test_load_without_enriched_fields_uses_defaults(self, tmp_path: Path) -> None:
+        seed_data = [
+            {
+                "user_id": "u-old",
+                "business_type": "x",
+                "what_worked": "y",
+                "why_worked": "z",
+                "reproducibility_score": 0.5,
+            }
+        ]
+        seed_file = tmp_path / "seed.json"
+        seed_file.write_text(json.dumps(seed_data), encoding="utf-8")
+
+        load_success_cases(path=seed_file, with_embeddings=False)
+        case = next(iter(_success_cases.values()))
+        assert case["owner_label"] == ""
+        assert case["concrete_prompt"] == ""
+        assert case["quantitative_effect"] == ""
+
+
+class TestExcludeUserId:
+    """対象ユーザー本人の事例を除外する機能のテスト。"""
+
+    def test_excludes_specified_user(self) -> None:
+        from src.tools.cosmos_io import SuccessCase, seed_success_case
+
+        seed_success_case(
+            SuccessCase(
+                user_id="u-takahashi",
+                business_type="経費精算",
+                what_worked="copilot",
+                why_worked="x",
+                reproducibility_score=0.9,
+            )
+        )
+        seed_success_case(
+            SuccessCase(
+                user_id="u-other",
+                business_type="経費精算",
+                what_worked="copilot",
+                why_worked="y",
+                reproducibility_score=0.5,
+            )
+        )
+
+        # exclude しない場合は両方ヒット
+        all_hits = semantic_search("経費精算で困っている")
+        all_user_ids = {_success_cases[h.case_id]["user_id"] for h in all_hits}
+        assert "u-takahashi" in all_user_ids
+
+        # u-takahashi を除外
+        filtered = semantic_search("経費精算で困っている", exclude_user_id="u-takahashi")
+        filtered_user_ids = {_success_cases[h.case_id]["user_id"] for h in filtered}
+        assert "u-takahashi" not in filtered_user_ids
+        assert "u-other" in filtered_user_ids
+
+
+class TestScoringWeights:
+    """業務種別ボーナスと再現可能性重みのテスト。"""
+
+    def test_business_type_bonus_lifts_matching_case(self) -> None:
+        from src.tools.cosmos_io import SuccessCase, seed_success_case
+
+        # business_type 不一致だが reproducibility 高い
+        seed_success_case(
+            SuccessCase(
+                user_id="u-x",
+                business_type="議事録要約",
+                what_worked="経費精算",  # what_worked にだけ「経費精算」を含めて文字列マッチさせる
+                why_worked="y",
+                reproducibility_score=0.95,
+            )
+        )
+        # business_type 一致 (低 reproducibility)
+        seed_success_case(
+            SuccessCase(
+                user_id="u-y",
+                business_type="経費精算",
+                what_worked="領収書 OCR",
+                why_worked="x",
+                reproducibility_score=0.4,
+            )
+        )
+
+        # 「経費精算」を含むクエリでは business_type 一致 (u-y) が上位に来る期待
+        hits = semantic_search("経費精算チェックで困っている")
+        assert len(hits) >= 1
+        top_user = _success_cases[hits[0].case_id]["user_id"]
+        assert top_user == "u-y", (
+            f"business_type 一致 u-y が上位のはず: {[h.case_id for h in hits]}"
+        )
+
+    def test_reproducibility_affects_ordering(self) -> None:
+        from src.tools.cosmos_io import SuccessCase, seed_success_case
+
+        # 同じ business_type / 同じマッチ度、reproducibility のみ違い
+        high = SuccessCase(
+            user_id="u-high",
+            business_type="月次レポート",
+            what_worked="月次レポート copilot",
+            why_worked="x",
+            reproducibility_score=0.95,
+        )
+        low = SuccessCase(
+            user_id="u-low",
+            business_type="月次レポート",
+            what_worked="月次レポート copilot",
+            why_worked="y",
+            reproducibility_score=0.10,
+        )
+        seed_success_case(high)
+        seed_success_case(low)
+
+        hits = semantic_search("月次レポートで困っている")
+        # 高 reproducibility が上位
+        assert hits[0].case_id == high.id

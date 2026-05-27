@@ -1,0 +1,22 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - button [ref=e9] [cursor=pointer]:
+      - img
+    - generic [ref=e10]:
+      - button "Readme" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: Readme
+      - button "Toggle theme" [ref=e13] [cursor=pointer]:
+        - img
+        - generic [ref=e14]: Toggle theme
+  - generic [ref=e18]:
+    - article [ref=e43]: 経費精算チェックで困っている経理部の高橋さん (user_id=u-takahashi-008) に合う成功事例を 3 件教えてください
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - textbox "Type your message here..." [active] [ref=e48]
+        - generic [ref=e49]:
+          - button [ref=e52] [cursor=pointer]:
+            - img
+          - generic [ref=e53]:
+            - button [disabled]:
+              - img
+      - article [ref=e56]: LLMs can make mistakes. Check important info.

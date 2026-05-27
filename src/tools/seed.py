@@ -74,6 +74,9 @@ def load_success_cases(path: Path | None = None, with_embeddings: bool = False) 
             what_worked=entry["what_worked"],
             why_worked=entry["why_worked"],
             reproducibility_score=float(entry["reproducibility_score"]),
+            owner_label=entry.get("owner_label", ""),
+            concrete_prompt=entry.get("concrete_prompt", ""),
+            quantitative_effect=entry.get("quantitative_effect", ""),
         )
         seed_success_case(case)
         if with_embeddings and embed_text is not None:

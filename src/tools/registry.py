@@ -54,15 +54,26 @@ def tool_save_pain_point(
     return {"id": saved_id, "status": pp.status}
 
 
-def tool_semantic_search(text: str, top_k: int = 3) -> list[dict]:
+def tool_semantic_search(
+    text: str,
+    top_k: int = 3,
+    exclude_user_id: str | None = None,
+) -> list[dict]:
     """困りごとテキストから類似成功事例を検索する。
 
     :param text: クエリ (困りごとの自然文)
     :param top_k: 上位何件を返すか
+    :param exclude_user_id: 推薦から除外したい user_id (例: 困りごとを持つ本人)。
+        本人に本人の事例を推薦しないために使う。
     :return: SearchHit のリスト (score 降順)
     """
     # Foundry function tool 経由では数値が文字列で届くことがあるため明示的にキャスト
-    return [asdict(h) for h in semantic_search(text=text, top_k=int(top_k))]
+    hits = semantic_search(
+        text=text,
+        top_k=int(top_k),
+        exclude_user_id=exclude_user_id or None,
+    )
+    return [asdict(h) for h in hits]
 
 
 def tool_fetch_success_cases(case_ids: list[str]) -> list[dict]:

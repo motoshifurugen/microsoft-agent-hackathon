@@ -1,72 +1,102 @@
 [
   {
     "user_id": "u-sato-001",
+    "owner_label": "営業部 佐藤さん",
     "business_type": "月次レポート作成",
-    "what_worked": "Copilot for M365 で前月データを Excel に貼り、要約と推移グラフ生成を依頼するプロンプトテンプレを使った",
-    "why_worked": "数値集計と説明文生成という反復作業のうち、説明文部分が Copilot に置換可能だった",
+    "what_worked": "前月データを Excel に貼り、Copilot for M365 で要約 + 推移グラフ生成のテンプレを投げて、人は最終チェックだけ",
+    "why_worked": "数値集計と説明文生成の反復作業のうち、説明文部分が Copilot に置換可能だった",
+    "concrete_prompt": "添付の月次データ Excel を読み込み、(1) 前月比トップ 3 の変動商品、(2) 売上推移の折れ線グラフ、(3) 経営層向けに 5 行のコメントを出力してください。コメントは「結論 → 要因 → 来月の見立て」の構成で。",
+    "quantitative_effect": "月 8h → 2.5h (約 70% 削減)",
     "reproducibility_score": 0.9
   },
   {
     "user_id": "u-yamada-002",
+    "owner_label": "経理企画 山田さん",
     "business_type": "月次レポート作成",
-    "what_worked": "前月比/前年比の異常値を自動検出するプロンプトを 3 行で書き、Copilot に投げてから人がレビューする手順に変えた",
+    "what_worked": "前月比/前年比の異常値だけ自動検出するプロンプトを 3 行で書き、Copilot に投げてから人がレビュー",
     "why_worked": "異常値検出は機械が得意、最終解釈は人が得意という分担が明確になった",
+    "concrete_prompt": "添付の月次仕訳データに対して、前月比 ±20% を超える勘定科目だけを抽出し、(1) 勘定科目名、(2) 前月比 %、(3) 主要取引先を 1 行 1 件で出力。並びは差異絶対値の降順。",
+    "quantitative_effect": "月 4h → 30min (異常値検出時間)",
     "reproducibility_score": 0.85
   },
   {
     "user_id": "u-tanaka-003",
+    "owner_label": "営業企画 田中さん",
     "business_type": "提案書作成",
-    "what_worked": "顧客の課題ヒアリングメモを貼り付け、Copilot に『3 つの解決策と費用感の比較表を作って』と指示してドラフトを得た",
+    "what_worked": "顧客ヒアリングメモを貼り付け、Copilot に 3 つの解決策と費用感の比較表を作らせてドラフトを得る",
     "why_worked": "比較表という構造が決まったアウトプットは LLM が高速に量産できる",
+    "concrete_prompt": "以下のヒアリングメモを読み、顧客課題に対する解決策を 3 案、各案について (1) 概要、(2) 想定費用レンジ、(3) 必要期間、(4) リスク を含む比較表 (Markdown) で出力してください。",
+    "quantitative_effect": "提案ドラフト 4h → 1h",
     "reproducibility_score": 0.8
   },
   {
     "user_id": "u-kimura-004",
+    "owner_label": "管理部 木村さん",
     "business_type": "議事録要約",
-    "what_worked": "Teams 会議の文字起こしを Copilot に渡し、決定事項・アクションアイテム・宿題の 3 セクション構造で要約させた",
+    "what_worked": "Teams 会議の文字起こしを Copilot に渡し、決定事項・アクションアイテム・宿題の 3 セクション構造で要約",
     "why_worked": "会議要約のフォーマットを固定化したことで毎回の品質が安定した",
+    "concrete_prompt": "以下の会議文字起こしを、(1) 決定事項 (箇条書き)、(2) アクションアイテム (担当者/期限つき)、(3) 次回までの宿題、の 3 セクションに整理してください。冗長な雑談部分は省略。",
+    "quantitative_effect": "1 会議 45min → 5min",
     "reproducibility_score": 0.95
   },
   {
     "user_id": "u-suzuki-005",
+    "owner_label": "管理部 鈴木さん",
     "business_type": "議事録要約",
-    "what_worked": "話者ごとの発言を時系列に並べ、アクションアイテムだけを抽出するプロンプトを用意した",
+    "what_worked": "話者ごとの発言を時系列に並べ、アクションアイテムだけを抽出するプロンプトを用意",
     "why_worked": "情報密度の低い雑談部分を捨て、決定とタスクだけを残せた",
+    "concrete_prompt": "添付の Teams transcript から、(1) 「やります」「対応します」等の合意発言、(2) 「○日までに」等の期限付き発言、(3) 「保留」「持ち帰り」発言、をそれぞれ別リストで抽出。各項目に発言者名を付与。",
+    "quantitative_effect": "アクション抽出 30min → 3min",
     "reproducibility_score": 0.9
   },
   {
     "user_id": "u-ito-006",
+    "owner_label": "営業部 伊藤さん",
     "business_type": "メール作成",
-    "what_worked": "顧客向けの謝罪メールやフォローアップは Copilot に過去類例メールを 1 通渡して『同じトーンで』と依頼した",
+    "what_worked": "顧客向け謝罪メールやフォローアップは、Copilot に過去の類例メールを 1 通渡して「同じトーンで」と依頼",
     "why_worked": "トーン継承のための類例 1 通が、ゼロから書くより 10 倍速かった",
+    "concrete_prompt": "[類例メール本文を貼り付け] 上記と同じ語調・敬語レベルで、以下の状況に対する謝罪メールを 200 字程度で作成してください。状況: [具体的事象]。先方の懸念は [懸念点] です。",
+    "quantitative_effect": "謝罪メール 1 通 30min → 5min",
     "reproducibility_score": 0.75
   },
   {
     "user_id": "u-watanabe-007",
+    "owner_label": "開発本部 渡辺さん",
     "business_type": "コードレビュー",
-    "what_worked": "GitHub Copilot に diff を貼り、レビュー観点 (セキュリティ/性能/可読性) を明示してチェックリスト化した",
-    "why_worked": "観点を先に与えると見落としが減る。観点なしで質問するとぼんやりした回答になる",
+    "what_worked": "GitHub Copilot に diff を貼り、レビュー観点 (セキュリティ/性能/可読性) を明示してチェックリスト化",
+    "why_worked": "観点を先に与えると見落としが減る。観点なしの質問だとぼんやりした回答になる",
+    "concrete_prompt": "以下の Pull Request diff に対して、(1) セキュリティ (SQL インジェクション等)、(2) 性能 (N+1 など)、(3) 可読性、(4) テスト網羅性、の 4 観点で各 3 つずつ指摘してください。各指摘は file:line で位置を示すこと。",
+    "quantitative_effect": "1 PR レビュー 40min → 15min",
     "reproducibility_score": 0.85
   },
   {
     "user_id": "u-takahashi-008",
+    "owner_label": "経理部 高橋さん",
     "business_type": "経費精算チェック",
     "what_worked": "領収書 PDF を Copilot で OCR + 金額抜き出し → 経費規程の閾値チェックを自動化",
     "why_worked": "領収書の構造化と規程突合という単純作業を機械化できた",
+    "concrete_prompt": "添付の領収書 PDF を読み取り、(1) 店舗名、(2) 日付、(3) 税抜金額、(4) 税額、(5) 軽減税率対象か、を JSON で抽出。さらに経費規程 (会食 1 人 5,000 円上限) を超過していたら警告フラグを true に。",
+    "quantitative_effect": "領収書 1 件 5min → 30sec",
     "reproducibility_score": 0.7
   },
   {
     "user_id": "u-nakamura-009",
+    "owner_label": "営業企画 中村さん",
     "business_type": "提案書作成",
-    "what_worked": "既存提案書 3 つを Copilot に読ませ、新規顧客向けに差分を埋めるテンプレ生成プロンプトを使った",
+    "what_worked": "既存提案書 3 つを Copilot に読ませ、新規顧客向けに差分を埋めるテンプレ生成",
     "why_worked": "ゼロから書くのではなく既存資産の流用ベースに変えたことで初速が出た",
+    "concrete_prompt": "以下 3 つの既存提案書を読み込み、新規顧客 [顧客名/業界/規模] 向けに、共通要素はそのまま、差分箇所 ([業界特有課題] [規模感] [事例]) だけを質問形式でリスト化してください。私がそれに答えれば提案書が完成する形に。",
+    "quantitative_effect": "提案書 1 本 6h → 2h",
     "reproducibility_score": 0.8
   },
   {
     "user_id": "u-kobayashi-010",
+    "owner_label": "経理企画 小林さん",
     "business_type": "月次レポート作成",
     "what_worked": "Copilot に SQL 結果の CSV を渡し、Markdown 形式の表とコメントを生成させてから Notion に貼った",
     "why_worked": "データから文書への変換を 1 プロンプトで完結させた",
+    "concrete_prompt": "添付の CSV (売上明細) を読み込み、(1) 部門別売上のサマリ表、(2) 前月比 % を含む推移表、(3) Top 5 顧客の売上、を Markdown table で出力。表の下に経営層向け 3 行コメントを添えてください。",
+    "quantitative_effect": "月次レポート作成 3h → 45min",
     "reproducibility_score": 0.85
   }
 ]
