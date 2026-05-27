@@ -6,12 +6,15 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from src.tools import graph_observe
 from src.tools.graph_observe import (
     Signal,
     _build_excerpt,
+    _fetch_recent_messages,
     _looks_like_pain,
     _signals_from_messages,
     fetch_signals,
@@ -127,3 +130,30 @@ class TestFetchSignals:
         assert len(signals) == 1
         assert signals[0].user_id == "u-1"
         assert "経費精算" in signals[0].business_context_hint
+
+
+class TestFetchRecentMessagesUrl:
+    def test_slash_in_user_id_is_url_encoded(self) -> None:
+        """user_id に / が含まれていても URL パスセグメントが壊れない。"""
+        captured_urls: list[str] = []
+
+        def fake_get(url: str, **kwargs: object) -> MagicMock:
+            captured_urls.append(url)
+            resp = MagicMock()
+            resp.json.return_value = {"value": []}
+            resp.raise_for_status.return_value = None
+            return resp
+
+        with patch("src.tools.graph_observe.httpx.get", side_effect=fake_get):
+            _fetch_recent_messages("attacker/injection", token="fake_token")
+
+        assert captured_urls, "httpx.get was not called"
+        url = captured_urls[0]
+        # The portion between /users/ and /messages must not contain a bare /
+        # Correct (encoded):   ...users/attacker%2Finjection/messages?...
+        # Incorrect (not encoded): ...users/attacker/injection/messages?...
+        after_users = url.split("/users/")[1]
+        user_id_portion = after_users.split("/messages")[0]
+        assert "/" not in user_id_portion, (
+            f"user_id was not URL-encoded; portion between /users/ and /messages: {user_id_portion!r}"
+        )

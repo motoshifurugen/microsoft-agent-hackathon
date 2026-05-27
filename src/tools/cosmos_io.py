@@ -106,3 +106,13 @@ def register_embedding(case_id: str, vector: list[float]) -> None:
 def has_embeddings() -> bool:
     """1 件以上の embedding が登録されているか。"""
     return bool(_embeddings)
+
+
+def get_all_embeddings() -> dict[str, list[float]]:
+    """全 embedding を返す (テスト・検索エンジンからのアクセス用)。"""
+    return _embeddings
+
+
+def get_all_success_cases() -> dict[str, dict]:
+    """全成功事例を返す (テスト・検索エンジンからのアクセス用)。"""
+    return _success_cases
