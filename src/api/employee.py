@@ -107,7 +107,11 @@ def today_pick() -> TodayPick:
     # 業務名が重複する効果文 (例: "月次レポート作成 3h → 45min") の二重表記を避ける
     if effect:
         effect_short = effect.replace(business, "").strip(" :;,—-")
-        headline = f"{owner}の{business} — {effect_short}" if effect_short else f"{owner}の{business} — {effect}"
+        headline = (
+            f"{owner}の{business} — {effect_short}"
+            if effect_short
+            else f"{owner}の{business} — {effect}"
+        )
     else:
         headline = f"{owner}の{business}"
 
