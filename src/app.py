@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 from src.config import load_settings
 from src.tools.credential import get_default_credential
 from src.tools.registry import ORCHESTRATOR_FUNCTIONS
-from src.tools.seed import load_success_cases
+from src.tools.seed import load_cold_start_templates, load_success_cases
 
 load_dotenv()
 
@@ -34,10 +34,11 @@ load_dotenv()
 # 認証エラーが env var エラーを隠蔽する問題を防ぐ。
 _settings = load_settings()
 
-# 起動時に in-memory store へダミー成功事例を投入する。
+# 起動時に in-memory store へダミーデータを投入する。
 # embedding 計算は起動時の Azure 依存を避けるため with_embeddings=False。
 # データ担当の Cosmos DB + Azure AI Search 本実装が来たらこの呼び出しは不要になる。
 _seeded_count = load_success_cases(with_embeddings=False)
+_seeded_template_count = load_cold_start_templates()
 
 _agents = AgentsClient(
     endpoint=_settings.project_endpoint,

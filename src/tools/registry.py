@@ -14,6 +14,7 @@ from dataclasses import asdict
 from src.tools.cosmos_io import (
     PainPoint,
     fetch_success_cases,
+    get_cold_start_templates,
     save_pain_point,
 )
 from src.tools.graph_observe import fetch_signals
@@ -85,6 +86,22 @@ def tool_fetch_success_cases(case_ids: list[str]) -> list[dict]:
     return [asdict(c) for c in fetch_success_cases(case_ids=case_ids)]
 
 
+def tool_get_cold_start_templates(business_category: str | None = None) -> list[dict]:
+    """業務カテゴリに合う Cold Start テンプレートを取得する。
+
+    類似成功事例が見つからなかった場合 (Cold Start 状態) に呼び出す。
+    業務カテゴリを指定すると合致するテンプレートだけを返す。
+    省略すると全テンプレートを返す。
+
+    :param business_category: 業務カテゴリ名 (例: "月次レポート作成")。None の場合は全件。
+    :return: ColdStartTemplate の dict リスト
+    """
+    templates = get_cold_start_templates()
+    if business_category is None:
+        return list(templates.values())
+    return [t for t in templates.values() if t.get("business_category") == business_category]
+
+
 # Foundry の FunctionTool に渡す関数セット。
 # Orchestrator がこれらすべてを保有し、ConnectedAgentTool 経由で子 Agent を呼びつつ
 # 自身も直接データ層を操作する設計。
@@ -93,4 +110,5 @@ ORCHESTRATOR_FUNCTIONS = {
     tool_save_pain_point,
     tool_semantic_search,
     tool_fetch_success_cases,
+    tool_get_cold_start_templates,
 }

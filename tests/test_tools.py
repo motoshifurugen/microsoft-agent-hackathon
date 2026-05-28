@@ -12,16 +12,20 @@ from unittest.mock import patch
 import pytest
 
 from src.tools.cosmos_io import (
+    ColdStartTemplate,
     PainPoint,
     SuccessCase,
     fetch_success_cases,
     get_all_embeddings,
     get_all_success_cases,
+    get_cold_start_templates,
     register_embedding,
     save_pain_point,
+    seed_cold_start_template,
     seed_success_case,
 )
 from src.tools.graph_observe import Signal, fetch_signals
+from src.tools.registry import tool_get_cold_start_templates
 from src.tools.search_query import semantic_search
 
 
@@ -30,9 +34,11 @@ def _reset_in_memory_store() -> Iterator[None]:
     """テストごとに in-memory store と embedding キャッシュをクリアする。"""
     get_all_success_cases().clear()
     get_all_embeddings().clear()
+    get_cold_start_templates().clear()
     yield
     get_all_success_cases().clear()
     get_all_embeddings().clear()
+    get_cold_start_templates().clear()
 
 
 class TestPainPoint:
@@ -178,3 +184,69 @@ class TestEmbeddingFallback:
         )
         # string-match fallback should still find the case
         assert any(h.case_id == case.id for h in results)
+
+
+def _make_template(category: str) -> ColdStartTemplate:
+    return ColdStartTemplate(
+        business_category=category,
+        title=f"{category}テンプレート",
+        description="説明",
+        common_pain="困りごと",
+        prompt="プロンプト",
+        steps=["step1", "step2"],
+        suitable_for="向いている人",
+        cautions="注意点",
+        feedback_question="？",
+    )
+
+
+class TestToolGetColdStartTemplates:
+    def test_returns_empty_when_store_is_empty(self) -> None:
+        result = tool_get_cold_start_templates()
+        assert result == []
+
+    def test_returns_all_templates_when_no_category(self) -> None:
+        seed_cold_start_template(_make_template("月次レポート作成"))
+        seed_cold_start_template(_make_template("議事録要約"))
+
+        result = tool_get_cold_start_templates()
+        assert len(result) == 2
+        categories = {r["business_category"] for r in result}
+        assert categories == {"月次レポート作成", "議事録要約"}
+
+    def test_filters_by_category(self) -> None:
+        seed_cold_start_template(_make_template("月次レポート作成"))
+        seed_cold_start_template(_make_template("議事録要約"))
+
+        result = tool_get_cold_start_templates(business_category="月次レポート作成")
+        assert len(result) == 1
+        assert result[0]["business_category"] == "月次レポート作成"
+
+    def test_returns_empty_for_unknown_category(self) -> None:
+        seed_cold_start_template(_make_template("月次レポート作成"))
+
+        result = tool_get_cold_start_templates(business_category="存在しないカテゴリ")
+        assert result == []
+
+    def test_result_contains_expected_fields(self) -> None:
+        seed_cold_start_template(_make_template("メール作成"))
+
+        result = tool_get_cold_start_templates(business_category="メール作成")
+        assert len(result) == 1
+        tpl = result[0]
+        for field in (
+            "business_category",
+            "title",
+            "prompt",
+            "steps",
+            "cautions",
+            "feedback_question",
+        ):
+            assert field in tpl
+
+    def test_result_is_json_serializable(self) -> None:
+        import json
+
+        seed_cold_start_template(_make_template("提案書作成"))
+        result = tool_get_cold_start_templates()
+        assert json.dumps(result)  # raises if not serializable

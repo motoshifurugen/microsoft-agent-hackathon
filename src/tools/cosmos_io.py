@@ -47,12 +47,35 @@ class SuccessCase:
     quantitative_effect: str = ""  # 例: "月 8h → 2.5h (約 70% 削減)"
 
 
+@dataclass(frozen=True)
+class ColdStartTemplate:
+    """Cold Start 用テンプレート (成功事例が少ない業務カテゴリ向け)。
+
+    成功事例が 0 件のカテゴリでも、すぐ使えるプロンプトと手順を提供する。
+    """
+
+    business_category: str
+    title: str
+    description: str
+    common_pain: str
+    prompt: str
+    # list[str] を使う理由: asdict() がタプルをそのまま返すため JSON 互換のリストが必要。
+    # frozen=True により属性の再代入は禁止されており、要素の変更は慣例として行わない。
+    steps: list[str]
+    suitable_for: str
+    cautions: str
+    feedback_question: str
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+
+
 # MVP: in-memory ストア。データ担当の実装で Cosmos DB に差し替え。
 _pain_points: dict[str, dict] = {}
 _success_cases: dict[str, dict] = {}
 # 成功事例 ID → embedding ベクトル。seed 時に register_embedding で投入される。
 # 本実装では Azure AI Search の index に置き換える前提。
 _embeddings: dict[str, list[float]] = {}
+# Cold Start テンプレート in-memory ストア。
+_cold_start_templates: dict[str, dict] = {}
 
 
 def save_pain_point(pain_point: PainPoint) -> str:
@@ -116,3 +139,17 @@ def get_all_embeddings() -> dict[str, list[float]]:
 def get_all_success_cases() -> dict[str, dict]:
     """全成功事例を返す (テスト・検索エンジンからのアクセス用)。"""
     return _success_cases
+
+
+def seed_cold_start_template(template: ColdStartTemplate) -> str:
+    """Cold Start テンプレートを in-memory store に投入し ID を返す。
+
+    本実装では Cosmos DB の `cold_start_templates` コンテナへの書き込みに差し替える。
+    """
+    _cold_start_templates[template.id] = asdict(template)
+    return template.id
+
+
+def get_cold_start_templates() -> dict[str, dict]:
+    """全 Cold Start テンプレートを返す (テスト・API からのアクセス用)。"""
+    return _cold_start_templates
