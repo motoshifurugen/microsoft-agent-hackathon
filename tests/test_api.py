@@ -99,11 +99,12 @@ class TestToday:
 
 
 class TestAdminUsers:
-    def test_returns_ten_users(self, client: TestClient) -> None:
+    def test_returns_users(self, client: TestClient) -> None:
+        # PR #9 で 10 → 22 件に拡充されたため、件数は >= 10 とする
         response = client.get("/api/admin/users")
         assert response.status_code == 200
         users = response.json()
-        assert len(users) == 10
+        assert len(users) >= 10
         for u in users:
             assert "user_id" in u
             assert "owner_label" in u
@@ -127,10 +128,11 @@ class TestAdminRecommendations:
         assert ids == {"A", "B"}
 
     def test_target_user_excluded(self, client: TestClient) -> None:
+        """対象ユーザー本人の事例が結果に含まれないこと (owner_label で判定)。"""
         body = client.get("/api/admin/users/u-takahashi-008/recommendations").json()
-        # 経費精算チェック事例は高橋さんのみ → 除外で別カテゴリが上位に来る
-        business_types = {c["business_type"] for c in body["cases"]}
-        assert "経費精算チェック" not in business_types
+        case_owners = {c["owner_label"] for c in body["cases"]}
+        # 高橋さん本人の事例は除外される
+        assert "経理部 高橋さん" not in case_owners
 
     def test_unknown_user_returns_404(self, client: TestClient) -> None:
         response = client.get("/api/admin/users/u-not-exist/recommendations")
