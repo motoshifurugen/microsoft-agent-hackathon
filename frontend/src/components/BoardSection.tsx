@@ -7,6 +7,7 @@
 // - フッター付近に「+ 質問する」ボタンで投稿フォームを開く
 import { useCallback, useEffect, useState } from "react";
 import { ChevronRight, MessageSquare, Plus, Send } from "lucide-react";
+import { SectionLabel } from "@/components/SectionLabel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -122,14 +123,6 @@ export function BoardSection({ categories }: BoardSectionProps) {
         />
       )}
     </section>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]">
-      {children}
-    </div>
   );
 }
 

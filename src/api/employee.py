@@ -13,28 +13,14 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, HTTPException
 
 from src.api.schemas import (
-    CaseDetail,
     CategoryCasesResponse,
     CategorySummary,
     TodayPick,
+    build_case_detail,
 )
 from src.tools.cosmos_io import get_all_success_cases
 
 router = APIRouter(prefix="/api", tags=["employee"])
-
-
-def _build_case_detail(case: dict, score: float = 0.0) -> CaseDetail:
-    return CaseDetail(
-        case_id=case["id"],
-        owner_label=case.get("owner_label", ""),
-        business_type=case.get("business_type", ""),
-        what_worked=case.get("what_worked", ""),
-        why_worked=case.get("why_worked", ""),
-        concrete_prompt=case.get("concrete_prompt", ""),
-        quantitative_effect=case.get("quantitative_effect", ""),
-        reproducibility_score=float(case.get("reproducibility_score", 0.0)),
-        score=score,
-    )
 
 
 def _index_by_category(cases: dict[str, dict]) -> dict[str, list[dict]]:
@@ -81,7 +67,7 @@ def cases_in_category(name: str) -> CategoryCasesResponse:
     )
     return CategoryCasesResponse(
         category=name,
-        cases=[_build_case_detail(c) for c in cases_sorted],
+        cases=[build_case_detail(c) for c in cases_sorted],
     )
 
 
@@ -115,4 +101,4 @@ def today_pick() -> TodayPick:
     else:
         headline = f"{owner}の{business}"
 
-    return TodayPick(case=_build_case_detail(case), headline=headline)
+    return TodayPick(case=build_case_detail(case), headline=headline)

@@ -82,3 +82,31 @@ class StrategyExecuteResponse(BaseModel):
     case_id: str
     message_preview: str
     executed_at: str
+
+
+def build_case_detail(case: dict, score: float = 0.0) -> CaseDetail:
+    """in-memory store の dict から CaseDetail を組み立てる共通ヘルパー。
+
+    admin / employee 両ルーターで同じ変換が必要だったため共通化。
+    """
+    return CaseDetail(
+        case_id=case["id"],
+        owner_label=case.get("owner_label", ""),
+        business_type=case.get("business_type", ""),
+        what_worked=case.get("what_worked", ""),
+        why_worked=case.get("why_worked", ""),
+        concrete_prompt=case.get("concrete_prompt", ""),
+        quantitative_effect=case.get("quantitative_effect", ""),
+        reproducibility_score=float(case.get("reproducibility_score", 0.0)),
+        score=score,
+    )
+
+
+def build_user_summary(case: dict) -> UserSummary:
+    """SuccessCase dict から UserSummary を組み立てる共通ヘルパー。"""
+    return UserSummary(
+        user_id=case["user_id"],
+        owner_label=case.get("owner_label", ""),
+        business_type=case.get("business_type", ""),
+        quantitative_effect=case.get("quantitative_effect", ""),
+    )
