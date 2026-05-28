@@ -59,3 +59,25 @@ export interface StrategyExecuteResponse {
   message_preview: string;
   executed_at: string;
 }
+
+export interface BoardQuestion {
+  id: string;
+  title: string;
+  body: string;
+  business_category: string | null;
+  author: string;
+  created_at: string;
+  answer_count: number;
+}
+
+export interface BoardAnswer {
+  id: string;
+  question_id: string;
+  body: string;
+  author: string;
+  created_at: string;
+}
+
+export interface BoardQuestionDetail extends BoardQuestion {
+  answers: BoardAnswer[];
+}
