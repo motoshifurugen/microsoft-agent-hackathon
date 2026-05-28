@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Compass, Heart, Sparkles } from "lucide-react";
 import { BoardSection } from "@/components/BoardSection";
 import { CaseCard } from "@/components/CaseCard";
+import { CategoryGrid } from "@/components/CategoryGrid";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { fetchCasesInCategory, fetchCategories, fetchToday } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -127,24 +128,19 @@ export default function App() {
         )}
 
         <section>
-          <SectionLabel icon={<Compass className="h-3.5 w-3.5" />}>業務カテゴリから探す</SectionLabel>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <button
-                key={c.name}
-                type="button"
-                onClick={() => setSelectedCategory(c.name)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-xs transition-colors",
-                  selectedCategory === c.name
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-                    : "border-[var(--color-border)] bg-[var(--color-card)] hover:bg-[var(--color-accent)]",
-                )}
-              >
-                {c.name}
-                <span className="ml-1 opacity-70">({c.case_count})</span>
-              </button>
-            ))}
+          <div className="inline-block rounded-md bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[var(--color-primary)]">
+            活用シーン
+          </div>
+          <h2 className="mt-2 text-2xl font-bold leading-tight">あなたの業務、どこで使える？</h2>
+          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+            {categories.length} の業務カテゴリ — 当てはまる場面を 1 つでも見つけよう
+          </p>
+          <div className="mt-4">
+            <CategoryGrid
+              categories={categories}
+              selected={selectedCategory}
+              onSelect={setSelectedCategory}
+            />
           </div>
         </section>
 
