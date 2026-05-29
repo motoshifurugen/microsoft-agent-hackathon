@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserSummary(BaseModel):
@@ -68,6 +68,31 @@ class RecommendationResponse(BaseModel):
     target_business_type: str
     cases: list[CaseDetail]
     strategies: list[Strategy]
+
+
+class PainMatchRequest(BaseModel):
+    """WebApp 困りごと入力欄からのマッチング依頼。"""
+
+    text: str = Field(min_length=1, description="困りごとの自然文")
+    client_id: str = Field(default="", description="localStorage 由来の識別子。空なら匿名扱い")
+    business_context: str = Field(default="", description="業務文脈 (任意)")
+    top_k: int = Field(default=3, ge=1, le=10, description="返す事例の最大件数")
+
+    @field_validator("text")
+    @classmethod
+    def _text_not_blank(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("text must not be blank")
+        return stripped
+
+
+class PainMatchResponse(BaseModel):
+    """困りごとマッチング結果。"""
+
+    pain_point_id: str
+    query: str
+    cases: list[CaseDetail]
 
 
 class StrategyExecuteRequest(BaseModel):

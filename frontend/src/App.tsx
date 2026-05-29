@@ -3,10 +3,12 @@ import { Compass, Heart, Search, Sparkles } from "lucide-react";
 import { BoardSection } from "@/components/BoardSection";
 import { CaseCard } from "@/components/CaseCard";
 import { CategoryGrid } from "@/components/CategoryGrid";
+import { PainInput } from "@/components/PainInput";
 import { SectionLabel } from "@/components/SectionLabel";
 import { ShareCTA } from "@/components/ShareCTA";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TodaySection } from "@/components/TodaySection";
+import { useClientId } from "@/hooks/useClientId";
 import { useLocalStorageJson } from "@/hooks/useLocalStorageJson";
 import { fetchCasesInCategory, fetchCategories, fetchToday } from "@/lib/api";
 import type { CaseDetail, CategorySummary, TodayPick } from "@/types/api";
@@ -21,7 +23,9 @@ export default function App() {
   const [allCases, setAllCases] = useState<CaseDetail[]>([]);
   const [copyFlash, setCopyFlash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [painResult, setPainResult] = useState<{ query: string; cases: CaseDetail[] } | null>(null);
 
+  const clientId = useClientId();
   const feedback = useLocalStorageJson(FEEDBACK_KEY);
   const tried = useLocalStorageJson(TRIED_KEY);
 
@@ -60,6 +64,10 @@ export default function App() {
     },
     [feedback],
   );
+
+  const handlePainResult = useCallback((query: string, cases: CaseDetail[]) => {
+    setPainResult({ query, cases });
+  }, []);
 
   const handleShareIntent = useCallback(() => {
     setCopyFlash("ご自身の成功例は DX 推進部にメッセージで共有してください");
@@ -124,6 +132,35 @@ export default function App() {
             className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] py-2.5 pl-9 pr-3 text-sm shadow-sm outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
           />
         </div>
+
+        {!hasQuery && <PainInput clientId={clientId} onResult={handlePainResult} />}
+
+        {!hasQuery && painResult && (
+          <section>
+            <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />}>
+              あなたの困りごとに近い事例
+              <span className="ml-1 text-[var(--color-muted-foreground)]">
+                — 「{painResult.query}」{painResult.cases.length} 件
+              </span>
+            </SectionLabel>
+            <div className="grid gap-3 pt-3">
+              {painResult.cases.map((c) => (
+                <CaseCard
+                  key={c.case_id}
+                  caseDetail={c}
+                  feedback={feedback.value[c.case_id] as "good" | "soso" | undefined}
+                  onCopy={() => handleCopy(c.case_id, c.concrete_prompt)}
+                  onFeedback={(v) => handleFeedback(c.case_id, v)}
+                />
+              ))}
+              {painResult.cases.length === 0 && (
+                <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-muted-foreground)]">
+                  近い事例はまだありません。あなたが最初の成功事例を共有してみませんか？
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         {!hasQuery && (
           <section>

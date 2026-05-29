@@ -141,6 +141,11 @@ def get_all_success_cases() -> dict[str, dict]:
     return _success_cases
 
 
+def get_all_pain_points() -> dict[str, dict]:
+    """全困りごとを返す (テスト・API からのアクセス用)。"""
+    return _pain_points
+
+
 def seed_cold_start_template(template: ColdStartTemplate) -> str:
     """Cold Start テンプレートを in-memory store に投入し ID を返す。
 
