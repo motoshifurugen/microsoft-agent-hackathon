@@ -34,6 +34,7 @@ from src.api.admin import router as admin_router
 from src.api.board import router as board_router
 from src.api.board import seed_sample_board
 from src.api.employee import router as employee_router
+from src.tools.cosmos_io import reset_in_memory_stores
 from src.tools.seed import load_success_cases
 
 _logger = logging.getLogger(__name__)
@@ -45,10 +46,7 @@ async def _lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
 
     uvicorn --reload で複数回呼ばれても冪等になるよう、毎回 store をクリアしてから load する。
     """
-    from src.tools.cosmos_io import _embeddings, _success_cases
-
-    _success_cases.clear()
-    _embeddings.clear()
+    reset_in_memory_stores()
 
     try:
         count = load_success_cases(with_embeddings=True)
@@ -56,8 +54,7 @@ async def _lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     except Exception as exc:
         # embedding 失敗時、部分 load された state を捨ててから fallback で全件再 load
         _logger.warning("embedding seed failed, retrying without embeddings: %s", exc)
-        _success_cases.clear()
-        _embeddings.clear()
+        reset_in_memory_stores()
         count = load_success_cases(with_embeddings=False)
         _logger.info("seeded %d success cases (no embeddings)", count)
 

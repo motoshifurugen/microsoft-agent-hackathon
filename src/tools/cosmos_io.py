@@ -153,3 +153,18 @@ def seed_cold_start_template(template: ColdStartTemplate) -> str:
 def get_cold_start_templates() -> dict[str, dict]:
     """全 Cold Start テンプレートを返す (テスト・API からのアクセス用)。"""
     return _cold_start_templates
+
+
+def reset_in_memory_stores() -> None:
+    """in-memory ストア群を全部クリアする。
+
+    主な用途:
+    - FastAPI lifespan (uvicorn --reload の多重 seed 防止)
+    - pytest fixture (テスト間の状態リセット)
+
+    Cold Start テンプレートはここでは触らない (起動時 seed 後に消えると Cold Start
+    シナリオが破綻するため)。クリアしたい場合は呼び出し側が個別に処理する。
+    """
+    _success_cases.clear()
+    _embeddings.clear()
+    _pain_points.clear()

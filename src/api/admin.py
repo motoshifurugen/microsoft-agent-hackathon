@@ -11,12 +11,13 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 
 from src.api.schemas import (
-    CaseDetail,
     RecommendationResponse,
     Strategy,
     StrategyExecuteRequest,
     StrategyExecuteResponse,
     UserSummary,
+    build_case_detail,
+    build_user_summary,
 )
 from src.tools.cosmos_io import get_all_success_cases
 from src.tools.registry import tool_fetch_success_cases, tool_semantic_search
@@ -25,29 +26,6 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 # 戦略実行履歴 (in-memory; 本実装では Cosmos DB match_history に保存予定)
 _strategy_executions: list[dict] = []
-
-
-def _build_case_detail(case: dict, score: float = 0.0) -> CaseDetail:
-    return CaseDetail(
-        case_id=case["id"],
-        owner_label=case.get("owner_label", ""),
-        business_type=case.get("business_type", ""),
-        what_worked=case.get("what_worked", ""),
-        why_worked=case.get("why_worked", ""),
-        concrete_prompt=case.get("concrete_prompt", ""),
-        quantitative_effect=case.get("quantitative_effect", ""),
-        reproducibility_score=float(case.get("reproducibility_score", 0.0)),
-        score=score,
-    )
-
-
-def _user_summary(case: dict) -> UserSummary:
-    return UserSummary(
-        user_id=case["user_id"],
-        owner_label=case.get("owner_label", ""),
-        business_type=case.get("business_type", ""),
-        quantitative_effect=case.get("quantitative_effect", ""),
-    )
 
 
 def _build_strategies(top_case_owner: str) -> list[Strategy]:
@@ -75,7 +53,7 @@ def list_users() -> list[UserSummary]:
         if not user_id or user_id in seen:
             continue
         seen[user_id] = case
-    return [_user_summary(c) for c in seen.values()]
+    return [build_user_summary(c) for c in seen.values()]
 
 
 @router.get("/users/{user_id}/recommendations", response_model=RecommendationResponse)
@@ -97,7 +75,7 @@ def get_recommendations(user_id: str, top_k: int = 3) -> RecommendationResponse:
     details = tool_fetch_success_cases(case_ids=case_ids)
 
     score_map = {h["case_id"]: h["score"] for h in hits}
-    case_payload = [_build_case_detail(d, score_map.get(d["id"], 0.0)) for d in details]
+    case_payload = [build_case_detail(d, score_map.get(d["id"], 0.0)) for d in details]
 
     top_owner = case_payload[0].owner_label if case_payload else "成功者の方"
     return RecommendationResponse(

@@ -13,20 +13,21 @@ from fastapi.testclient import TestClient
 
 from src.api.admin import _strategy_executions
 from src.api.main import app
-from src.tools.cosmos_io import _embeddings, _success_cases
+from src.tools.cosmos_io import reset_in_memory_stores
+
+
+def _reset_all() -> None:
+    reset_in_memory_stores()
+    _strategy_executions.clear()
 
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
     """毎テストで in-memory store を初期化してから lifespan 起動。"""
-    _success_cases.clear()
-    _embeddings.clear()
-    _strategy_executions.clear()
+    _reset_all()
     with TestClient(app) as c:
         yield c
-    _success_cases.clear()
-    _embeddings.clear()
-    _strategy_executions.clear()
+    _reset_all()
 
 
 # --- ヘルスチェック ---
