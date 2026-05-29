@@ -6,6 +6,6 @@ Foundry への登録は scripts/create_agents.py が担当する。
 
 from __future__ import annotations
 
-from src.agents import collector, matcher, observer, orchestrator, proposer
+from src.agents import collector, matcher, orchestrator, proposer
 
-__all__ = ["collector", "matcher", "observer", "orchestrator", "proposer"]
+__all__ = ["collector", "matcher", "orchestrator", "proposer"]
