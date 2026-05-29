@@ -5,6 +5,7 @@ import type {
   BoardAnswer,
   BoardQuestion,
   BoardQuestionDetail,
+  CaseDetail,
   CategoryCasesResponse,
   CategorySummary,
   PainMatchResponse,
@@ -37,6 +38,14 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function deleteJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
+  if (!res.ok) {
+    throw new Error(`DELETE ${path} failed: ${res.status}`);
+  }
+  return (await res.json()) as T;
+}
+
 // 社員系
 export const fetchCategories = (): Promise<CategorySummary[]> => getJson("/categories");
 
@@ -51,6 +60,18 @@ export const matchPain = (payload: {
   business_context?: string;
   top_k?: number;
 }): Promise<PainMatchResponse> => postJson("/pain/match", payload);
+
+// Skill ブックマーク (サーバー側永続)。いずれも当該 client_id の保存事例一覧を返す。
+export const fetchBookmarks = (clientId: string): Promise<CaseDetail[]> =>
+  getJson(`/bookmarks?client_id=${encodeURIComponent(clientId)}`);
+
+export const addBookmark = (clientId: string, caseId: string): Promise<CaseDetail[]> =>
+  postJson("/bookmarks", { client_id: clientId, case_id: caseId });
+
+export const removeBookmark = (clientId: string, caseId: string): Promise<CaseDetail[]> =>
+  deleteJson(
+    `/bookmarks?client_id=${encodeURIComponent(clientId)}&case_id=${encodeURIComponent(caseId)}`,
+  );
 
 // 管理者系
 export const fetchAdminUsers = (): Promise<UserSummary[]> => getJson("/admin/users");

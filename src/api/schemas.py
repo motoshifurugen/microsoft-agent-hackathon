@@ -95,6 +95,13 @@ class PainMatchResponse(BaseModel):
     cases: list[CaseDetail]
 
 
+class BookmarkRequest(BaseModel):
+    """Skill ブックマーク追加リクエスト。"""
+
+    client_id: str = Field(min_length=1, description="localStorage 由来の所有者識別子")
+    case_id: str = Field(min_length=1, description="ブックマーク対象の成功事例 ID")
+
+
 class StrategyExecuteRequest(BaseModel):
     target_user_id: str
     case_id: str

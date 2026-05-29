@@ -1,4 +1,4 @@
-import { Copy, Sparkles, ThumbsUp } from "lucide-react";
+import { Bookmark, Copy, Sparkles, ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -7,11 +7,20 @@ import type { CaseDetail } from "@/types/api";
 interface CaseCardProps {
   caseDetail: CaseDetail;
   feedback?: "good" | "soso";
+  bookmarked?: boolean;
   onCopy: () => void;
   onFeedback: (value: "good" | "soso") => void;
+  onToggleBookmark?: () => void;
 }
 
-export function CaseCard({ caseDetail, feedback, onCopy, onFeedback }: CaseCardProps) {
+export function CaseCard({
+  caseDetail,
+  feedback,
+  bookmarked = false,
+  onCopy,
+  onFeedback,
+  onToggleBookmark,
+}: CaseCardProps) {
   return (
     <article className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm">
       <header className="flex items-start justify-between gap-3">
@@ -26,9 +35,27 @@ export function CaseCard({ caseDetail, feedback, onCopy, onFeedback }: CaseCardP
             </div>
           )}
         </div>
-        <Badge variant="muted" className="shrink-0 text-[10px]">
-          {caseDetail.business_type}
-        </Badge>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Badge variant="muted" className="text-[10px]">
+            {caseDetail.business_type}
+          </Badge>
+          {onToggleBookmark && (
+            <button
+              type="button"
+              onClick={onToggleBookmark}
+              aria-pressed={bookmarked}
+              title={bookmarked ? "保存済み" : "保存する"}
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-full border transition-colors",
+                bookmarked
+                  ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
+                  : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-accent)]",
+              )}
+            >
+              <Bookmark className={cn("h-3.5 w-3.5", bookmarked && "fill-current")} />
+            </button>
+          )}
+        </div>
       </header>
 
       <p className="mt-3 text-sm leading-relaxed">{caseDetail.what_worked}</p>

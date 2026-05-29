@@ -9,6 +9,7 @@
 - /api/categories/{name}/cases       カテゴリ別事例 (社員)
 - /api/today                         今日のおすすめ (社員)
 - /api/pain/match                     困りごと入力 → 類似事例マッチング (社員)
+- /api/bookmarks                      Skill ブックマーク GET/POST/DELETE (社員)
 - /api/admin/users                   メンバー一覧 (管理者)
 - /api/admin/users/{id}/recommendations  推薦事例 + 戦略 A/B (管理者)
 - /api/admin/strategies/{id}/execute 戦略実行プレビュー (管理者)
@@ -34,6 +35,7 @@ from fastapi.staticfiles import StaticFiles
 from src.api.admin import router as admin_router
 from src.api.board import router as board_router
 from src.api.board import seed_sample_board
+from src.api.bookmarks import router as bookmarks_router
 from src.api.employee import router as employee_router
 from src.api.pain import router as pain_router
 from src.tools.cosmos_io import reset_in_memory_stores
@@ -93,6 +95,7 @@ app.include_router(employee_router)
 app.include_router(admin_router)
 app.include_router(board_router)
 app.include_router(pain_router)
+app.include_router(bookmarks_router)
 
 # Vite ビルド成果物 (frontend/dist) を静的配信。Container では /app/frontend_dist にコピーされる前提。
 # ローカルでは frontend/dist ディレクトリがあれば配信、無ければ Vite dev server を別途使う。

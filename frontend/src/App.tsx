@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Compass, Heart, Search, Sparkles } from "lucide-react";
+import { Bookmark, Compass, Heart, Search, Sparkles } from "lucide-react";
 import { BoardSection } from "@/components/BoardSection";
 import { CaseCard } from "@/components/CaseCard";
 import { CategoryGrid } from "@/components/CategoryGrid";
@@ -10,7 +10,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TodaySection } from "@/components/TodaySection";
 import { useClientId } from "@/hooks/useClientId";
 import { useLocalStorageJson } from "@/hooks/useLocalStorageJson";
-import { fetchCasesInCategory, fetchCategories, fetchToday } from "@/lib/api";
+import {
+  addBookmark,
+  fetchBookmarks,
+  fetchCasesInCategory,
+  fetchCategories,
+  fetchToday,
+  removeBookmark,
+} from "@/lib/api";
 import type { CaseDetail, CategorySummary, TodayPick } from "@/types/api";
 
 const FEEDBACK_KEY = "kodama-feedback";
@@ -24,10 +31,16 @@ export default function App() {
   const [copyFlash, setCopyFlash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [painResult, setPainResult] = useState<{ query: string; cases: CaseDetail[] } | null>(null);
+  const [bookmarks, setBookmarks] = useState<CaseDetail[]>([]);
 
   const clientId = useClientId();
   const feedback = useLocalStorageJson(FEEDBACK_KEY);
   const tried = useLocalStorageJson(TRIED_KEY);
+
+  const bookmarkedIds = useMemo(
+    () => new Set(bookmarks.map((b) => b.case_id)),
+    [bookmarks],
+  );
 
   useEffect(() => {
     fetchToday()
@@ -46,6 +59,24 @@ export default function App() {
       })
       .catch(() => setCategories([]));
   }, []);
+
+  useEffect(() => {
+    fetchBookmarks(clientId)
+      .then(setBookmarks)
+      .catch(() => setBookmarks([]));
+  }, [clientId]);
+
+  const handleToggleBookmark = useCallback(
+    async (caseId: string) => {
+      const mutate = bookmarkedIds.has(caseId) ? removeBookmark : addBookmark;
+      try {
+        setBookmarks(await mutate(clientId, caseId));
+      } catch {
+        // ネットワーク失敗時は状態を変えない (次回操作で再同期)
+      }
+    },
+    [bookmarkedIds, clientId],
+  );
 
   const handleCopy = useCallback(
     (caseId: string, text: string) => {
@@ -101,6 +132,18 @@ export default function App() {
     .filter((c): c is CaseDetail => Boolean(c))
     .slice(0, 3);
 
+  const renderCase = (c: CaseDetail) => (
+    <CaseCard
+      key={c.case_id}
+      caseDetail={c}
+      feedback={feedback.value[c.case_id] as "good" | "soso" | undefined}
+      bookmarked={bookmarkedIds.has(c.case_id)}
+      onCopy={() => handleCopy(c.case_id, c.concrete_prompt)}
+      onFeedback={(v) => handleFeedback(c.case_id, v)}
+      onToggleBookmark={() => void handleToggleBookmark(c.case_id)}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
       <header className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-card)]/95 backdrop-blur">
@@ -144,21 +187,25 @@ export default function App() {
               </span>
             </SectionLabel>
             <div className="grid gap-3 pt-3">
-              {painResult.cases.map((c) => (
-                <CaseCard
-                  key={c.case_id}
-                  caseDetail={c}
-                  feedback={feedback.value[c.case_id] as "good" | "soso" | undefined}
-                  onCopy={() => handleCopy(c.case_id, c.concrete_prompt)}
-                  onFeedback={(v) => handleFeedback(c.case_id, v)}
-                />
-              ))}
+              {painResult.cases.map(renderCase)}
               {painResult.cases.length === 0 && (
                 <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-muted-foreground)]">
                   近い事例はまだありません。あなたが最初の成功事例を共有してみませんか？
                 </p>
               )}
             </div>
+          </section>
+        )}
+
+        {!hasQuery && bookmarks.length > 0 && (
+          <section>
+            <SectionLabel icon={<Bookmark className="h-3.5 w-3.5" />}>
+              保存したスキル
+              <span className="ml-1 text-[var(--color-muted-foreground)]">
+                — {bookmarks.length} 件
+              </span>
+            </SectionLabel>
+            <div className="grid gap-3 pt-3">{bookmarks.map(renderCase)}</div>
           </section>
         )}
 
@@ -194,15 +241,7 @@ export default function App() {
             )}
           </SectionLabel>
           <div className="grid gap-3 pt-3">
-            {displayedCases.map((c) => (
-              <CaseCard
-                key={c.case_id}
-                caseDetail={c}
-                feedback={feedback.value[c.case_id] as "good" | "soso" | undefined}
-                onCopy={() => handleCopy(c.case_id, c.concrete_prompt)}
-                onFeedback={(v) => handleFeedback(c.case_id, v)}
-              />
-            ))}
+            {displayedCases.map(renderCase)}
             {displayedCases.length === 0 && (
               <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-muted-foreground)]">
                 {allCases.length === 0
