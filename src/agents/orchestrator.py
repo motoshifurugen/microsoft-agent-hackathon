@@ -1,7 +1,7 @@
 """Orchestrator Agent: ユーザー対話の窓口。
 
 要件定義書 §5.2 の "オーケストレーター (全体制御)" に対応。
-ConnectedAgentTool で 4 子 Agent (観測・収集・マッチング・提案) を保有し、
+ConnectedAgentTool で 3 子 Agent (収集・マッチング・提案) を保有し、
 ユーザー意図に応じて適切な子 Agent を呼び分ける。
 """
 
@@ -9,7 +9,9 @@ from __future__ import annotations
 
 NAME = "orchestrator"
 
-DESCRIPTION = "ユーザー対話の窓口となり、観測・収集・マッチング・提案の各 Agent を文脈に応じて呼び分ける主 Agent。"
+DESCRIPTION = (
+    "ユーザー対話の窓口となり、収集・マッチング・提案の各 Agent を文脈に応じて呼び分ける主 Agent。"
+)
 
 INSTRUCTIONS = """\
 あなたは社内 AI 活用を伝播させる Agentic AI のオーケストレーターです。
