@@ -62,6 +62,18 @@ export const matchPain = (payload: {
 }): Promise<PainMatchResponse> => postJson("/pain/match", payload);
 
 // Skill ブックマーク (サーバー側永続)。いずれも当該 client_id の保存事例一覧を返す。
+// 成功事例の登録 (共有フォーム)
+export const createCase = (payload: {
+  client_id: string;
+  owner_label: string;
+  business_type: string;
+  what_worked: string;
+  why_worked?: string;
+  concrete_prompt?: string;
+  quantitative_effect?: string;
+  reproducibility_score?: number;
+}): Promise<CaseDetail> => postJson("/cases", payload);
+
 export const fetchBookmarks = (clientId: string): Promise<CaseDetail[]> =>
   getJson(`/bookmarks?client_id=${encodeURIComponent(clientId)}`);
 

@@ -102,6 +102,27 @@ class BookmarkRequest(BaseModel):
     case_id: str = Field(min_length=1, description="ブックマーク対象の成功事例 ID")
 
 
+class CaseCreateRequest(BaseModel):
+    """ユーザーが自分の成功事例を共有フォームから登録するリクエスト。"""
+
+    client_id: str = Field(min_length=1, description="登録者の識別子 (user_id として保存)")
+    owner_label: str = Field(min_length=1, description="表示名 (例: 営業部 佐藤さん)")
+    business_type: str = Field(min_length=1, description="業務カテゴリ")
+    what_worked: str = Field(min_length=1, description="うまくいったこと / やったこと")
+    why_worked: str = Field(default="", description="なぜ効いたか (任意)")
+    concrete_prompt: str = Field(default="", description="使ったプロンプト (任意)")
+    quantitative_effect: str = Field(default="", description="定量効果 (任意)")
+    reproducibility_score: float = Field(default=0.5, ge=0.0, le=1.0, description="再現性 0.0-1.0")
+
+    @field_validator("owner_label", "business_type", "what_worked")
+    @classmethod
+    def _not_blank(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("must not be blank")
+        return stripped
+
+
 class StrategyExecuteRequest(BaseModel):
     target_user_id: str
     case_id: str

@@ -5,7 +5,7 @@ import { CaseCard } from "@/components/CaseCard";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { PainInput } from "@/components/PainInput";
 import { SectionLabel } from "@/components/SectionLabel";
-import { ShareCTA } from "@/components/ShareCTA";
+import { ShareForm } from "@/components/ShareForm";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TodaySection } from "@/components/TodaySection";
 import { useClientId } from "@/hooks/useClientId";
@@ -100,9 +100,8 @@ export default function App() {
     setPainResult({ query, cases });
   }, []);
 
-  const handleShareIntent = useCallback(() => {
-    setCopyFlash("ご自身の成功例は DX 推進部にメッセージで共有してください");
-    setTimeout(() => setCopyFlash(null), 2500);
+  const handleCaseCreated = useCallback((created: CaseDetail) => {
+    setAllCases((prev) => [created, ...prev]);
   }, []);
 
   const trimmedQuery = searchQuery.trim();
@@ -275,7 +274,7 @@ export default function App() {
 
         {!hasQuery && <BoardSection categories={categories.map((c) => c.name)} />}
 
-        {!hasQuery && <ShareCTA onClick={handleShareIntent} />}
+        {!hasQuery && <ShareForm clientId={clientId} onCreated={handleCaseCreated} />}
 
         <footer className="pb-6 pt-2 text-center text-[11px] text-[var(--color-muted-foreground)]">
           Kodama — Microsoft Agent Hackathon 2026
