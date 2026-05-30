@@ -30,6 +30,31 @@ def client() -> Iterator[TestClient]:
     _reset_all()
 
 
+def _has_static_mount() -> bool:
+    return any(getattr(r, "name", None) == "static" for r in app.routes)
+
+
+# --- SPA 静的配信 (frontend/dist がある環境のみ) ---
+
+
+@pytest.mark.skipif(not _has_static_mount(), reason="frontend/dist not built")
+class TestSPAStatic:
+    def test_root_serves_index_html(self, client: TestClient) -> None:
+        response = client.get("/")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+
+    def test_client_route_falls_back_to_index(self, client: TestClient) -> None:
+        response = client.get("/board")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+
+    def test_unknown_api_path_stays_json_404(self, client: TestClient) -> None:
+        response = client.get("/api/does-not-exist")
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Not Found"}
+
+
 # --- ヘルスチェック ---
 
 

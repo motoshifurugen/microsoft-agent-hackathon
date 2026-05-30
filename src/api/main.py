@@ -32,6 +32,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.api.admin import router as admin_router
 from src.api.agent_chat import router as agent_chat_router
@@ -105,6 +106,21 @@ app.include_router(bookmarks_router)
 app.include_router(cases_router)
 app.include_router(agent_chat_router)
 
+
+class SPAStaticFiles(StaticFiles):
+    """SPA 用: 実在しないパスは index.html を返し、クライアントサイドルーティング
+    (/board, /categories 等) の直接アクセス/リロードを成立させる。
+    /api 配下の未マッチは JSON 404 を維持する。"""
+
+    async def get_response(self, path: str, scope):  # type: ignore[override]
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code == 404 and not path.startswith("api/"):
+                return await super().get_response("index.html", scope)
+            raise
+
+
 # Vite ビルド成果物 (frontend/dist) を静的配信。Container では /app/frontend_dist にコピーされる前提。
 # ローカルでは frontend/dist ディレクトリがあれば配信、無ければ Vite dev server を別途使う。
 _STATIC_CANDIDATES = (
@@ -113,7 +129,7 @@ _STATIC_CANDIDATES = (
 )
 _static_dir = next((p for p in _STATIC_CANDIDATES if p.exists()), None)
 if _static_dir is not None:
-    app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
+    app.mount("/", SPAStaticFiles(directory=str(_static_dir), html=True), name="static")
     _logger.info("serving static frontend from %s", _static_dir)
 else:
     _logger.info("no static frontend found; API-only mode (use Vite dev server for UI)")
