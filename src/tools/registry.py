@@ -11,8 +11,11 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
+from src.api.categories import normalize_category
+from src.tools.case_writer import register_success_case
 from src.tools.cosmos_io import (
     PainPoint,
+    SuccessCase,
     fetch_success_cases,
     get_cold_start_templates,
     save_pain_point,
@@ -91,6 +94,60 @@ def tool_get_cold_start_templates(business_category: str | None = None) -> list[
     return [t for t in templates.values() if t.get("business_category") == business_category]
 
 
+def tool_register_success_case(
+    user_id: str,
+    owner_label: str,
+    business_type: str,
+    what_worked: str,
+    why_worked: str = "",
+    concrete_prompt: str = "",
+    quantitative_effect: str = "",
+    reproducibility_score: float = 0.5,
+) -> dict:
+    """本人承認済みの AI 活用成功事例を登録し、検索可能にする。
+
+    チャットでユーザーが「うまくいった」体験を話し、本人が共有に同意した場合のみ呼ぶ
+    (Human-in-the-Loop)。登録された事例は embedding 化され、次の誰かの困りごと検索に
+    ヒットするようになる (組織知の継続蓄積)。
+
+    :param user_id: 登録者の ID (additional_instructions で渡される登録者本人)
+    :param owner_label: 表示名 (例: "営業部 佐藤さん")。本人に確認した値を渡す
+    :param business_type: 業務カテゴリ (例: "議事録要約")
+    :param what_worked: うまくいったこと / やったこと (必須)
+    :param why_worked: なぜ効いたか (任意)
+    :param concrete_prompt: 使った実プロンプト (任意)
+    :param quantitative_effect: 定量効果 (任意、例: "30分 → 5分")
+    :param reproducibility_score: 再現性 0.0-1.0 (範囲外は丸める)
+    :return: 登録結果 dict。必須項目が空なら error を返す
+    """
+    owner = owner_label.strip()
+    what = what_worked.strip()
+    category = normalize_category(business_type)
+    if not user_id.strip() or not owner or not category or not what:
+        return {
+            "error": "user_id・owner_label・business_type・what_worked は必須です",
+        }
+
+    try:
+        score = float(reproducibility_score)
+    except (TypeError, ValueError):
+        score = 0.5
+    score = max(0.0, min(1.0, score))
+
+    case = SuccessCase(
+        user_id=user_id.strip(),
+        business_type=category,
+        what_worked=what,
+        why_worked=why_worked.strip(),
+        reproducibility_score=score,
+        owner_label=owner,
+        concrete_prompt=concrete_prompt.strip(),
+        quantitative_effect=quantitative_effect.strip(),
+    )
+    register_success_case(case)
+    return {"status": "registered", "owner_label": owner, "business_type": category}
+
+
 # Foundry の FunctionTool に渡す関数セット。
 # Orchestrator がこれらすべてを保有し、ConnectedAgentTool 経由で子 Agent を呼びつつ
 # 自身も直接データ層を操作する設計。
@@ -99,4 +156,5 @@ ORCHESTRATOR_FUNCTIONS = {
     tool_semantic_search,
     tool_fetch_success_cases,
     tool_get_cold_start_templates,
+    tool_register_success_case,
 }

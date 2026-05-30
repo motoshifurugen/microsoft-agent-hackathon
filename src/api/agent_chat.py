@@ -99,6 +99,20 @@ def _sse(payload: dict) -> str:
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
+def _registrant_instructions(client_id: str) -> str:
+    """成功事例登録時に使う登録者 user_id を Run 単位で Orchestrator に注入する。
+
+    list_my_cases は user_id == client_id で絞り込むため、登録の user_id を
+    呼び出し元の client_id に固定しないと「自分の事例」に反映されない。
+    匿名 (anonymous-webapp) でも安定した識別子なので同じ規則で扱う。
+    """
+    return (
+        f"登録者の user_id は {client_id} です。"
+        "成功事例を登録 (tool_register_success_case) する際は必ずこの user_id を使い、"
+        "推測した値や別の値を使わないこと。owner_label (表示名) は本人に確認すること。"
+    )
+
+
 def _stream_agent_reply(message: str, client_id: str):
     """Orchestrator Run を stream し、SSE 文字列を yield するジェネレータ。"""
     try:
@@ -121,7 +135,11 @@ def _stream_agent_reply(message: str, client_id: str):
         # tool 呼び出しがあると stream は「ツール実行 run の完了 (DONE) → 自動 submit →
         # 応答テキストの continuation run」と複数 run にまたがる。DONE で break すると
         # 本文 (continuation の MessageDelta) を取りこぼすため、イテレータを自然枯渇させる。
-        with state.agents.runs.stream(thread_id=thread_id, agent_id=agent_id) as stream:
+        with state.agents.runs.stream(
+            thread_id=thread_id,
+            agent_id=agent_id,
+            additional_instructions=_registrant_instructions(client_id),
+        ) as stream:
             for event_type, event_data, _ in stream:
                 if isinstance(event_data, MessageDeltaChunk):
                     if event_data.text:

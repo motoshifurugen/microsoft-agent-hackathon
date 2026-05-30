@@ -13,7 +13,8 @@ from fastapi import APIRouter, Query, status
 
 from src.api.categories import normalize_category
 from src.api.schemas import CaseCreateRequest, CaseDetail, build_case_detail
-from src.tools.cosmos_io import SuccessCase, get_all_success_cases, seed_success_case
+from src.tools.case_writer import register_success_case
+from src.tools.cosmos_io import SuccessCase, get_all_success_cases
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
 
@@ -42,5 +43,5 @@ def create_case(req: CaseCreateRequest) -> CaseDetail:
         concrete_prompt=req.concrete_prompt,
         quantitative_effect=req.quantitative_effect,
     )
-    seed_success_case(case)
+    register_success_case(case)
     return build_case_detail(asdict(case))
