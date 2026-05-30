@@ -126,7 +126,7 @@ class TestToday:
 
 class TestAdminUsers:
     def test_returns_users(self, client: TestClient) -> None:
-        # PR #9 で 10 → 22 件に拡充されたため、件数は >= 10 とする
+        # サンプル事例の拡充で件数は増減しうるため、下限のみ >= 10 を検証する
         response = client.get("/api/admin/users")
         assert response.status_code == 200
         users = response.json()

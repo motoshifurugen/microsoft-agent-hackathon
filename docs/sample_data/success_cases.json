@@ -218,5 +218,225 @@
     "concrete_prompt": "以下の採用選考データ CSV を読み込み、(1) 選考段階ごとの通過率、(2) 職種・部門別の応募数と内定数、(3) 前年同期比の変化、(4) 次回採用活動への示唆 2 点、を出力してください。個人が特定できる情報は集計値のみ使用してください。",
     "quantitative_effect": "採用分析レポート 3h → 40min",
     "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-mori-023",
+    "owner_label": "総務部 森さん",
+    "business_type": "アンケート集計",
+    "what_worked": "社内満足度アンケートの自由記述を Copilot でテーマ分類し、ポジ/ネガの感情ラベルと代表コメントを抽出",
+    "why_worked": "数百件の自由記述を人手で読む工程が、分類と代表抽出だけ AI に任せて確認に絞れた",
+    "concrete_prompt": "添付の社内満足度アンケート (自由記述 CSV) を読み込み、(1) 頻出テーマを 8 件以内に分類し件数を集計、(2) 各テーマをポジティブ/ネガティブ/中立に判定、(3) テーマごとの代表コメントを 1 件ずつ (個人特定情報は除去)、を出力してください。",
+    "quantitative_effect": "自由記述の集計 6h → 1.5h",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-hashimoto-024",
+    "owner_label": "人事部 橋本さん",
+    "business_type": "アンケート集計",
+    "what_worked": "研修後アンケートの 5 段階評価と自由記述を Copilot に渡し、設問別スコアと改善提案を一括生成",
+    "why_worked": "定量スコアの集計と定性コメントの要約を 1 プロンプトに束ねたことで、報告書作成までが一気通貫になった",
+    "concrete_prompt": "以下の研修アンケート CSV (5 段階評価 + 自由記述) を読み込み、(1) 設問ごとの平均スコアと分布、(2) 評価が低い設問トップ 3 とその自由記述の要約、(3) 次回研修への改善提案 3 点、を出力してください。",
+    "quantitative_effect": "研修アンケート分析 3h → 40min",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-abe-025",
+    "owner_label": "マーケティング部 阿部さん",
+    "business_type": "アンケート集計",
+    "what_worked": "顧客 NPS アンケートを Copilot で推奨者/中立者/批判者に自動仕分けし、批判者コメントの要因分類まで実施",
+    "why_worked": "NPS の分類ロジックは定型なので、計算と要因タグ付けを機械化して人は施策検討に集中できた",
+    "concrete_prompt": "添付の NPS アンケート CSV (0-10 スコア + コメント) を読み込み、(1) 推奨者/中立者/批判者の割合と NPS 値、(2) 批判者コメントの不満要因を 5 カテゴリに分類し件数集計、(3) 改善優先度トップ 3、を出力してください。",
+    "quantitative_effect": "NPS 分析 4h → 50min",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-ishikawa-026",
+    "owner_label": "企画部 石川さん",
+    "business_type": "アンケート集計",
+    "what_worked": "イベント来場者アンケートの選択式と自由記述を Copilot で集計し、次回企画に使えるインサイトを抽出",
+    "why_worked": "集計表の生成と示唆出しを分けず一括依頼したことで、振り返り会の資料がその場で揃った",
+    "concrete_prompt": "以下のイベントアンケート CSV を読み込み、(1) 満足度・再参加意向の集計、(2) 良かったコンテンツ/改善希望の頻出ワード、(3) 次回企画への示唆 3 点、(4) 来場者属性別の傾向、を Markdown で出力してください。",
+    "quantitative_effect": "イベント振り返り資料 3h → 45min",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-yamaguchi-027",
+    "owner_label": "マーケティング部 山口さん",
+    "business_type": "メール作成",
+    "what_worked": "セミナー案内メールを、対象セグメントと訴求点を変数化して Copilot で複数パターン一括生成",
+    "why_worked": "セグメント別に文面を作り分ける作業を、変数差し替えのテンプレ生成に置き換えられた",
+    "concrete_prompt": "以下のセミナー情報をもとに、案内メールを 3 セグメント (既存顧客/見込み客/休眠顧客) 向けに作成してください。各メールは件名・本文 (200 字程度)・CTA を含み、訴求点をセグメントごとに変えてください。セミナー: [テーマ/日時/対象]。",
+    "quantitative_effect": "セグメント別案内 3 通 1h → 15min",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-nakajima-028",
+    "owner_label": "営業部 中島さん",
+    "business_type": "メール作成",
+    "what_worked": "商談後のお礼とネクストアクション提示メールを、商談メモを貼るだけで Copilot に下書きさせた",
+    "why_worked": "商談直後の温度感が高いうちに送るべきメールの初速が上がり、フォロー漏れが減った",
+    "concrete_prompt": "以下の商談メモを読み、(1) お礼、(2) 本日の論点の整理 (3 点)、(3) 次回までの双方の宿題、(4) 次回日程の打診、を含むフォローメールを 250 字程度で作成してください。文体は丁寧だが堅すぎないビジネス語で。",
+    "quantitative_effect": "商談フォローメール 20min → 4min",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-okada-029",
+    "owner_label": "広報部 岡田さん",
+    "business_type": "メール作成",
+    "what_worked": "プレスリリース配信時のメディア向け案内メールを、リリース本文から Copilot に要点抽出させて作成",
+    "why_worked": "リリース本文の要約と訴求文の生成をまとめて頼むことで、配信準備の手戻りがなくなった",
+    "concrete_prompt": "以下のプレスリリース本文を読み、メディア各社への案内メールを作成してください。(1) 一文での要点、(2) ニュースバリュー 3 点、(3) 取材・問い合わせ先、を含め、件名と本文 (200 字程度) を出力してください。",
+    "quantitative_effect": "メディア案内メール 40min → 10min",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-goto-030",
+    "owner_label": "経理部 後藤さん",
+    "business_type": "経費精算",
+    "what_worked": "交通費精算の経路と金額を Copilot で突合し、定期区間控除の漏れを自動検出",
+    "why_worked": "定期区間の控除という見落としやすいチェックを機械化し、差し戻し件数が減った",
+    "concrete_prompt": "以下の交通費申請一覧 (出発地・到着地・金額・申請者) と社員の定期区間データを突合し、(1) 定期区間に含まれるのに申請されている区間、(2) 経路最安値と申請額の差額が 200 円以上の行、を抽出して理由とともにリスト化してください。",
+    "quantitative_effect": "交通費チェック 2h → 25min",
+    "reproducibility_score": 0.75
+  },
+  {
+    "user_id": "u-hasegawa-031",
+    "owner_label": "総務部 長谷川さん",
+    "business_type": "経費精算",
+    "what_worked": "請求書 PDF の勘定科目仕訳を Copilot で下書きし、経理担当が確認・確定する運用に変更",
+    "why_worked": "仕訳の一次案を AI が出すことで、判断が必要なグレー案件だけに担当者の時間を回せた",
+    "concrete_prompt": "添付の請求書 PDF を読み取り、(1) 支払先、(2) 金額 (税抜/税額)、(3) 推奨勘定科目と補助科目、(4) 摘要文、を JSON で出力してください。勘定科目の判断に迷う場合は候補を 2 つ挙げ、それぞれの根拠を添えてください。",
+    "quantitative_effect": "仕訳入力 1 件 4min → 1min",
+    "reproducibility_score": 0.7
+  },
+  {
+    "user_id": "u-murakami-032",
+    "owner_label": "管理部 村上さん",
+    "business_type": "経費精算",
+    "what_worked": "出張精算の規程適合チェックを Copilot に任せ、宿泊上限・日当・経路の三点を一括判定",
+    "why_worked": "複数の規程条項を同時に突合する作業は人だと漏れが出るが、条件を列挙すれば AI が網羅できた",
+    "concrete_prompt": "以下の出張精算申請を、当社規程 (宿泊: 都内 12,000 円/地方 9,000 円上限、日当: 役職別 [別表]、経路: 最安経路) に照らしてチェックし、(1) 適合、(2) 要確認 (理由つき)、(3) 規程超過 (超過額つき) に分類してください。",
+    "quantitative_effect": "出張精算チェック 1.5h → 20min",
+    "reproducibility_score": 0.75
+  },
+  {
+    "user_id": "u-sakamoto-033",
+    "owner_label": "経営企画 坂本さん",
+    "business_type": "月次レポート作成",
+    "what_worked": "事業部別の月次実績を Copilot に渡し、予実差異の要因コメントを自動ドラフトしてから役員報告へ",
+    "why_worked": "予実差異の説明文は毎月同じ構成になるため、ひな型生成を AI に任せて検証に注力できた",
+    "concrete_prompt": "添付の事業部別予実データ (予算/実績/前年) を読み込み、(1) 予実差異が大きい事業部トップ 3、(2) 各差異の想定要因コメント (各 2 行)、(3) 全社の着地見込みコメント、を役員報告向けの簡潔な文体で出力してください。",
+    "quantitative_effect": "役員月次報告 5h → 1.5h",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-endo-034",
+    "owner_label": "財務部 遠藤さん",
+    "business_type": "月次レポート作成",
+    "what_worked": "資金繰り月報のコメントを Copilot で生成し、入出金の山谷の説明を定型化",
+    "why_worked": "資金繰りの説明は専門的だが構造が決まっており、テンプレ化することで属人性を下げられた",
+    "concrete_prompt": "以下の資金繰り実績データを読み込み、(1) 当月の入出金サマリ、(2) 残高が最低となる日とその要因、(3) 翌月の資金需要の見立て、(4) 留意すべきリスク 2 点、を月報向けに箇条書きで出力してください。",
+    "quantitative_effect": "資金繰り月報 3h → 50min",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-fujita-035",
+    "owner_label": "営業企画 藤田さん",
+    "business_type": "提案書作成",
+    "what_worked": "RFP の要件を Copilot で構造化し、自社が応答すべき項目の抜け漏れチェックリストを生成",
+    "why_worked": "RFP の要件抽出という地味だが重要な作業を機械化し、提案の対応漏れを防げた",
+    "concrete_prompt": "添付の RFP 文書を読み込み、(1) 必須要件と任意要件を分けて一覧化、(2) 各要件に対する自社の対応可否欄つきチェックリスト、(3) 提案で差別化すべき要件トップ 3、を Markdown table で出力してください。",
+    "quantitative_effect": "RFP 要件整理 4h → 1h",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-ota-036",
+    "owner_label": "マーケティング部 太田さん",
+    "business_type": "提案書作成",
+    "what_worked": "提案書のエグゼクティブサマリを、本編スライドの内容を Copilot に渡して 1 枚に要約生成",
+    "why_worked": "本編が固まってから冒頭サマリを書く逆算作業が、要約依頼一発で済むようになった",
+    "concrete_prompt": "以下の提案書本編のテキストを読み込み、経営層向けエグゼクティブサマリを 1 枚分作成してください。(1) 顧客課題の一文要約、(2) 提案の核心 (3 点)、(3) 期待効果 (定量)、(4) 投資対効果の見立て、を含めてください。",
+    "quantitative_effect": "サマリ作成 1.5h → 20min",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-nishida-037",
+    "owner_label": "管理部 西田さん",
+    "business_type": "議事録要約",
+    "what_worked": "取締役会の長時間文字起こしを Copilot で議題ごとに分割要約し、決議事項を抽出",
+    "why_worked": "議題単位に区切ってから要約させることで、長尺会議でも要点が崩れなくなった",
+    "concrete_prompt": "以下の取締役会の文字起こしを、議題ごとに区切って、(1) 議題名、(2) 論点の要約 (3 行以内)、(3) 決議事項と賛否、(4) 継続審議事項、を構造化して出力してください。発言者の固有名は [氏名] で代替してください。",
+    "quantitative_effect": "取締役会議事録 2h → 30min",
+    "reproducibility_score": 0.9
+  },
+  {
+    "user_id": "u-harada-038",
+    "owner_label": "法務部 原田さん",
+    "business_type": "議事録要約",
+    "what_worked": "契約交渉の打ち合わせメモを Copilot で要約し、合意点・係争点・持ち帰り条項を分類",
+    "why_worked": "交渉の論点整理は神経を使うが、分類だけ先に AI に出させて法的判断に集中できた",
+    "concrete_prompt": "以下の契約交渉メモを読み、(1) 双方が合意した条項、(2) 見解が割れている条項とそれぞれの主張、(3) 自社が持ち帰って検討する事項、(4) 次回までに準備すべき資料、を分類して出力してください。",
+    "quantitative_effect": "交渉論点整理 1h → 15min",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-fukuda-039",
+    "owner_label": "開発本部 福田さん",
+    "business_type": "コードレビュー",
+    "what_worked": "テストコードの網羅性を Copilot にチェックさせ、未カバーの分岐とエッジケースの追加提案を取得",
+    "why_worked": "テストの抜け漏れ指摘は機械が得意で、人は提案されたケースの妥当性判断に専念できた",
+    "concrete_prompt": "以下の実装コードとそのテストコードを読み、(1) テストされていない分岐や条件、(2) 不足しているエッジケース (境界値・異常系・空入力)、(3) 追加すべきテストケースの概要、を一覧で出力してください。各項目に優先度 (高/中/低) を付けてください。",
+    "quantitative_effect": "テスト網羅性レビュー 50min → 15min",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-miura-040",
+    "owner_label": "情報システム部 三浦さん",
+    "business_type": "コードレビュー",
+    "what_worked": "インフラ構成変更の Pull Request を Copilot にレビューさせ、セキュリティと可用性の観点で指摘を生成",
+    "why_worked": "IaC の設定ミスは影響が大きいが、観点を明示してチェックさせることで重大な見落としを防げた",
+    "concrete_prompt": "以下の Terraform diff を読み、(1) セキュリティ (公開範囲・権限過剰・暗号化漏れ)、(2) 可用性 (冗長性・スケーリング)、(3) コスト影響、(4) 破壊的変更の有無、の 4 観点でレビューしてください。指摘はリソース名と行で位置を示すこと。",
+    "quantitative_effect": "IaC レビュー 1h → 25min",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-takeuchi-041",
+    "owner_label": "カスタマーサポート 竹内さん",
+    "business_type": "問い合わせ対応",
+    "what_worked": "技術的な不具合問い合わせを Copilot で切り分け質問のテンプレに整形し、一次回答の往復を削減",
+    "why_worked": "必要情報を最初の返信で漏れなく聞けるようになり、何度も聞き返すラリーが減った",
+    "concrete_prompt": "以下の不具合問い合わせを読み、(1) 原因切り分けに必要な確認事項を漏れなくリスト化 (環境・再現手順・エラー文言など)、(2) 想定される原因トップ 3、(3) 暫定回避策があれば提示、を含む一次回答文を作成してください。",
+    "quantitative_effect": "一次回答の往復 3 回 → 1 回",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-nakano-042",
+    "owner_label": "情報システム部 中野さん",
+    "business_type": "問い合わせ対応",
+    "what_worked": "社内ヘルプデスクの問い合わせを Copilot でカテゴリ分類し、ナレッジ記事への誘導を自動提案",
+    "why_worked": "問い合わせの 7 割が既存ナレッジで解決可能と分かり、記事誘導の定型化で対応工数が減った",
+    "concrete_prompt": "以下の社内ヘルプデスク問い合わせを読み、(1) カテゴリ分類 (アカウント/PC/ネットワーク/ソフトウェア/その他)、(2) 該当しそうな社内ナレッジ記事の検索キーワード、(3) 一次回答の下書き、を出力してください。",
+    "quantitative_effect": "ヘルプデスク対応 1 件 12min → 4min",
+    "reproducibility_score": 0.8
+  },
+  {
+    "user_id": "u-otsuka-043",
+    "owner_label": "企画部 大塚さん",
+    "business_type": "データ集計",
+    "what_worked": "Web アクセスログの CSV を Copilot に渡し、流入経路別のコンバージョン傾向を要約コメント化",
+    "why_worked": "数値の羅列から意味のある傾向を言語化する工程を AI に任せ、人は施策仮説づくりに集中できた",
+    "concrete_prompt": "添付の Web アクセスデータ CSV (流入経路・PV・CV) を読み込み、(1) 流入経路別の CV 率ランキング、(2) 前月比で改善/悪化した経路、(3) 改善余地の大きい経路と仮説、を箇条書きで出力してください。",
+    "quantitative_effect": "アクセス分析コメント 2h → 30min",
+    "reproducibility_score": 0.85
+  },
+  {
+    "user_id": "u-otani-044",
+    "owner_label": "マーケティング部 大谷さん",
+    "business_type": "データ集計",
+    "what_worked": "広告キャンペーンの実績データを Copilot で媒体横断集計し、CPA とROAS の比較表を生成",
+    "why_worked": "媒体ごとにフォーマットが違うデータの突合を AI に任せ、横並び比較がすぐ出せるようになった",
+    "concrete_prompt": "以下の複数広告媒体の実績データ (費用・インプレッション・クリック・CV) を読み込み、(1) 媒体別の CPA・CVR・ROAS 比較表、(2) 効率の良い媒体トップ 3、(3) 予算再配分の提案、を Markdown で出力してください。",
+    "quantitative_effect": "媒体横断レポート 3h → 40min",
+    "reproducibility_score": 0.8
   }
 ]
