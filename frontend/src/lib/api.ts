@@ -55,6 +55,10 @@ export const fetchCasesInCategory = (name: string): Promise<CategoryCasesRespons
 // 登録セレクト用の固定カテゴリマスタ (表示順)。
 export const fetchCategoryMaster = (): Promise<string[]> => getJson("/categories/master");
 
+// 自分 (client_id) が登録した成功事例を新しい順で取得。
+export const fetchMyCases = (clientId: string): Promise<CaseDetail[]> =>
+  getJson(`/cases?client_id=${encodeURIComponent(clientId)}`);
+
 export const fetchToday = (): Promise<TodayPick> => getJson("/today");
 
 export const matchPain = (payload: {
