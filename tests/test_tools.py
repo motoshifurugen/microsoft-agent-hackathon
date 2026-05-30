@@ -24,7 +24,6 @@ from src.tools.cosmos_io import (
     seed_cold_start_template,
     seed_success_case,
 )
-from src.tools.graph_observe import Signal, fetch_signals
 from src.tools.registry import tool_get_cold_start_templates
 from src.tools.search_query import semantic_search
 
@@ -107,18 +106,6 @@ class TestSuccessCase:
 
         fetched = fetch_success_cases([b.id, a.id, "missing"])
         assert [c.id for c in fetched] == [b.id, a.id]
-
-
-class TestFetchSignals:
-    def test_empty_user_id_returns_empty(self) -> None:
-        assert fetch_signals(user_id="") == []
-
-    def test_returns_mock_signal_for_user(self) -> None:
-        signals = fetch_signals(user_id="u-1")
-        assert len(signals) == 1
-        assert isinstance(signals[0], Signal)
-        assert signals[0].user_id == "u-1"
-        assert signals[0].source_signal == "teams_message"
 
 
 class TestSemanticSearch:

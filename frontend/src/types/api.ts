@@ -60,6 +60,12 @@ export interface StrategyExecuteResponse {
   executed_at: string;
 }
 
+export interface PainMatchResponse {
+  pain_point_id: string;
+  query: string;
+  cases: CaseDetail[];
+}
+
 export interface BoardQuestion {
   id: string;
   title: string;

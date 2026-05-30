@@ -16,13 +16,12 @@ load_dotenv()
 
 @dataclass(frozen=True)
 class AgentIds:
-    """5 Agent の ID 集合。create_agents.py の出力を .env に転記する。
+    """4 Agent の ID 集合。create_agents.py の出力を .env に転記する。
 
     AGENT_ID は Orchestrator の ID を指す (後方互換のため変数名は維持)。
     """
 
     orchestrator: str
-    observer: str
     collector: str
     matcher: str
     proposer: str
@@ -58,7 +57,6 @@ def load_settings(require_child_agents: bool = False) -> Settings:
     if require_child_agents:
         agent_ids = AgentIds(
             orchestrator=orchestrator_id,
-            observer=_require("AGENT_ID_OBSERVER"),
             collector=_require("AGENT_ID_COLLECTOR"),
             matcher=_require("AGENT_ID_MATCHER"),
             proposer=_require("AGENT_ID_PROPOSER"),
@@ -66,7 +64,6 @@ def load_settings(require_child_agents: bool = False) -> Settings:
     else:
         agent_ids = AgentIds(
             orchestrator=orchestrator_id,
-            observer=_optional("AGENT_ID_OBSERVER"),
             collector=_optional("AGENT_ID_COLLECTOR"),
             matcher=_optional("AGENT_ID_MATCHER"),
             proposer=_optional("AGENT_ID_PROPOSER"),

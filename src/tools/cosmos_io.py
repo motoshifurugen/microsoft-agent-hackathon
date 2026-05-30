@@ -76,6 +76,10 @@ _success_cases: dict[str, dict] = {}
 _embeddings: dict[str, list[float]] = {}
 # Cold Start テンプレート in-memory ストア。
 _cold_start_templates: dict[str, dict] = {}
+# ブックマーク: client_id → {case_id: 追加時刻 ISO8601}。
+# 認証が無いため localStorage 由来の client_id を所有者キーとする。
+# 本実装では Cosmos DB の `bookmarks` コンテナに置き換える前提。
+_bookmarks: dict[str, dict[str, str]] = {}
 
 
 def save_pain_point(pain_point: PainPoint) -> str:
@@ -141,6 +145,11 @@ def get_all_success_cases() -> dict[str, dict]:
     return _success_cases
 
 
+def get_all_pain_points() -> dict[str, dict]:
+    """全困りごとを返す (テスト・API からのアクセス用)。"""
+    return _pain_points
+
+
 def seed_cold_start_template(template: ColdStartTemplate) -> str:
     """Cold Start テンプレートを in-memory store に投入し ID を返す。
 
@@ -153,6 +162,22 @@ def seed_cold_start_template(template: ColdStartTemplate) -> str:
 def get_cold_start_templates() -> dict[str, dict]:
     """全 Cold Start テンプレートを返す (テスト・API からのアクセス用)。"""
     return _cold_start_templates
+
+
+def add_bookmark(client_id: str, case_id: str) -> None:
+    """client_id のブックマークに case_id を追加する (冪等)。"""
+    _bookmarks.setdefault(client_id, {}).setdefault(case_id, datetime.now(UTC).isoformat())
+
+
+def remove_bookmark(client_id: str, case_id: str) -> None:
+    """client_id のブックマークから case_id を削除する (冪等)。"""
+    _bookmarks.get(client_id, {}).pop(case_id, None)
+
+
+def get_bookmarked_case_ids(client_id: str) -> list[str]:
+    """client_id がブックマークした case_id を追加時刻の新しい順で返す。"""
+    entries = _bookmarks.get(client_id, {})
+    return [case_id for case_id, _ in sorted(entries.items(), key=lambda kv: kv[1], reverse=True)]
 
 
 def reset_in_memory_stores() -> None:
@@ -168,3 +193,4 @@ def reset_in_memory_stores() -> None:
     _success_cases.clear()
     _embeddings.clear()
     _pain_points.clear()
+    _bookmarks.clear()

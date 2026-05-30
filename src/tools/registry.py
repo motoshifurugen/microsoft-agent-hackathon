@@ -17,18 +17,7 @@ from src.tools.cosmos_io import (
     get_cold_start_templates,
     save_pain_point,
 )
-from src.tools.graph_observe import fetch_signals
 from src.tools.search_query import semantic_search
-
-
-def tool_fetch_signals(user_id: str, since_iso: str | None = None) -> list[dict]:
-    """観測対象ユーザーの最近の困りごとシグナルを取得する。
-
-    :param user_id: 観測対象の内部 ID
-    :param since_iso: この時刻以降の発話のみ取得 (省略時は直近 1 時間)
-    :return: シグナル候補のリスト
-    """
-    return [asdict(s) for s in fetch_signals(user_id=user_id, since_iso=since_iso)]
 
 
 def tool_save_pain_point(
@@ -42,7 +31,7 @@ def tool_save_pain_point(
     :param user_id: 困りごとを持つユーザー ID
     :param business_context: 業務文脈 (例: 月次レポート作成)
     :param pain_description: 具体的な困りごとの説明
-    :param source_signal: 検知元シグナル種別 (teams_message 等)
+    :param source_signal: 検知元 (chat_input / webapp_input 等)
     :return: 保存された PainPoint の id を含む dict
     """
     pp = PainPoint(
@@ -106,7 +95,6 @@ def tool_get_cold_start_templates(business_category: str | None = None) -> list[
 # Orchestrator がこれらすべてを保有し、ConnectedAgentTool 経由で子 Agent を呼びつつ
 # 自身も直接データ層を操作する設計。
 ORCHESTRATOR_FUNCTIONS = {
-    tool_fetch_signals,
     tool_save_pain_point,
     tool_semantic_search,
     tool_fetch_success_cases,

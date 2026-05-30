@@ -3,7 +3,7 @@
 本番 UI は Teams + Copilot Studio (要件定義書 §5.1)。Chainlit は開発中の動作確認用に維持。
 
 `AGENT_ID` は Orchestrator の ID を指す (scripts/create_agents.py の出力)。
-Orchestrator が ConnectedAgentTool で 4 子 Agent (observer / collector / matcher / proposer) を
+Orchestrator が ConnectedAgentTool で 3 子 Agent (collector / matcher / proposer) を
 呼び分けるため、本ファイルからは Orchestrator のみを直接叩く。
 
 ローカル起動: `uv run chainlit run src/app.py`

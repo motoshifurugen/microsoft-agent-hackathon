@@ -9,10 +9,10 @@ from types import ModuleType
 
 import pytest
 
-from src.agents import collector, matcher, observer, orchestrator, proposer
+from src.agents import collector, matcher, orchestrator, proposer
 
-ALL_AGENTS: list[ModuleType] = [orchestrator, observer, collector, matcher, proposer]
-CHILD_AGENTS: list[ModuleType] = [observer, collector, matcher, proposer]
+ALL_AGENTS: list[ModuleType] = [orchestrator, collector, matcher, proposer]
+CHILD_AGENTS: list[ModuleType] = [collector, matcher, proposer]
 
 
 @pytest.mark.parametrize("agent_module", ALL_AGENTS)
@@ -32,7 +32,7 @@ def test_agent_names_are_unique() -> None:
 
 
 def test_orchestrator_instructions_reference_all_children() -> None:
-    """Orchestrator の instructions が 4 子 Agent の名前を参照していること。
+    """Orchestrator の instructions が 3 子 Agent の名前を参照していること。
 
     instructions と実際のエージェント名がズレると Orchestrator が子を呼べないため。
     """
@@ -43,6 +43,6 @@ def test_orchestrator_instructions_reference_all_children() -> None:
 
 
 def test_child_agents_names_match_expected() -> None:
-    expected = {"observer", "collector", "matcher", "proposer"}
+    expected = {"collector", "matcher", "proposer"}
     actual = {m.NAME for m in CHILD_AGENTS}
     assert actual == expected
