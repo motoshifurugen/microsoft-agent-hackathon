@@ -40,7 +40,7 @@ export function Sidebar() {
   const profile = deriveProfile(myCases[0]?.owner_label);
 
   return (
-    <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-card)]">
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-card)]">
       <NavLink to="/" className="flex items-center gap-2 px-5 py-4">
         <Compass className="h-6 w-6 text-[var(--color-primary)]" />
         <div className="text-base font-bold leading-tight">Kodama</div>
