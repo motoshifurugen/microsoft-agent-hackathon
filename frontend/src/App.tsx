@@ -3,6 +3,7 @@ import { Bookmark, Compass, Heart, Search, Sparkles } from "lucide-react";
 import { BoardSection } from "@/components/BoardSection";
 import { CaseCard } from "@/components/CaseCard";
 import { CategoryGrid } from "@/components/CategoryGrid";
+import { CategoryView } from "@/components/CategoryView";
 import { PainInput } from "@/components/PainInput";
 import { SectionLabel } from "@/components/SectionLabel";
 import { ShareForm } from "@/components/ShareForm";
@@ -23,24 +24,23 @@ import type { CaseDetail, CategorySummary, TodayPick } from "@/types/api";
 const FEEDBACK_KEY = "kodama-feedback";
 const TRIED_KEY = "kodama-tried";
 
+type View = { name: "home" } | { name: "category"; category: string };
+
 export default function App() {
   const [today, setToday] = useState<TodayPick | null>(null);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [allCases, setAllCases] = useState<CaseDetail[]>([]);
   const [copyFlash, setCopyFlash] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [painResult, setPainResult] = useState<{ query: string; cases: CaseDetail[] } | null>(null);
   const [bookmarks, setBookmarks] = useState<CaseDetail[]>([]);
+  const [view, setView] = useState<View>({ name: "home" });
 
   const clientId = useClientId();
   const feedback = useLocalStorageJson(FEEDBACK_KEY);
   const tried = useLocalStorageJson(TRIED_KEY);
 
-  const bookmarkedIds = useMemo(
-    () => new Set(bookmarks.map((b) => b.case_id)),
-    [bookmarks],
-  );
+  const bookmarkedIds = useMemo(() => new Set(bookmarks.map((b) => b.case_id)), [bookmarks]);
 
   useEffect(() => {
     fetchToday()
@@ -50,7 +50,6 @@ export default function App() {
     fetchCategories()
       .then(async (c) => {
         setCategories(c);
-        if (c[0]) setSelectedCategory(c[0].name);
         const results = await Promise.all(
           c.map((cat) => fetchCasesInCategory(cat.name).catch(() => null)),
         );
@@ -65,6 +64,16 @@ export default function App() {
       .then(setBookmarks)
       .catch(() => setBookmarks([]));
   }, [clientId]);
+
+  const goHome = useCallback(() => {
+    setView({ name: "home" });
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const openCategory = useCallback((category: string) => {
+    setView({ name: "category", category });
+    window.scrollTo({ top: 0 });
+  }, []);
 
   const handleToggleBookmark = useCallback(
     async (caseId: string) => {
@@ -107,23 +116,27 @@ export default function App() {
   const trimmedQuery = searchQuery.trim();
   const hasQuery = trimmedQuery.length > 0;
 
-  const displayedCases = useMemo(() => {
-    if (hasQuery) {
-      const q = trimmedQuery.toLowerCase();
-      return allCases.filter((c) =>
-        [
-          c.owner_label,
-          c.business_type,
-          c.what_worked,
-          c.why_worked,
-          c.concrete_prompt,
-          c.quantitative_effect,
-        ].some((field) => field?.toLowerCase().includes(q)),
-      );
-    }
-    if (!selectedCategory) return allCases;
-    return allCases.filter((c) => c.business_type === selectedCategory);
-  }, [allCases, hasQuery, trimmedQuery, selectedCategory]);
+  const searchResults = useMemo(() => {
+    if (!hasQuery) return [];
+    const q = trimmedQuery.toLowerCase();
+    return allCases.filter((c) =>
+      [
+        c.owner_label,
+        c.business_type,
+        c.what_worked,
+        c.why_worked,
+        c.concrete_prompt,
+        c.quantitative_effect,
+      ].some((field) => field?.toLowerCase().includes(q)),
+    );
+  }, [allCases, hasQuery, trimmedQuery]);
+
+  const categoryCases = useMemo(() => {
+    if (view.name !== "category") return [];
+    return allCases
+      .filter((c) => c.business_type === view.category)
+      .sort((a, b) => b.reproducibility_score - a.reproducibility_score);
+  }, [allCases, view]);
 
   const triedCases = Object.entries(tried.value)
     .sort(([, a], [, b]) => (b ?? "").localeCompare(a ?? ""))
@@ -147,7 +160,12 @@ export default function App() {
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
       <header className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-card)]/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-3">
-          <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={goHome}
+            className="flex items-center gap-2 text-left"
+            aria-label="ホームに戻る"
+          >
             <Compass className="h-5 w-5 text-[var(--color-primary)]" />
             <div className="leading-tight">
               <div className="text-base font-semibold">Kodama</div>
@@ -155,7 +173,7 @@ export default function App() {
                 社内の小さな成功を、次の誰かの力に
               </div>
             </div>
-          </div>
+          </button>
           <div className="flex items-center gap-2">
             {copyFlash && <span className="text-xs text-[var(--color-primary)]">{copyFlash}</span>}
             <ThemeToggle />
@@ -164,117 +182,123 @@ export default function App() {
       </header>
 
       <main className="mx-auto flex max-w-3xl flex-col gap-8 px-5 py-8">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="事例を検索（業務・効果・プロンプトなど）"
-            className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] py-2.5 pl-9 pr-3 text-sm shadow-sm outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
+        {view.name === "category" ? (
+          <CategoryView
+            category={view.category}
+            cases={categoryCases}
+            renderCase={renderCase}
+            onBack={goHome}
           />
-        </div>
-
-        {!hasQuery && <PainInput clientId={clientId} onResult={handlePainResult} />}
-
-        {!hasQuery && painResult && (
-          <section>
-            <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />}>
-              あなたの困りごとに近い事例
-              <span className="ml-1 text-[var(--color-muted-foreground)]">
-                — 「{painResult.query}」{painResult.cases.length} 件
-              </span>
-            </SectionLabel>
-            <div className="grid gap-3 pt-3">
-              {painResult.cases.map(renderCase)}
-              {painResult.cases.length === 0 && (
-                <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-muted-foreground)]">
-                  近い事例はまだありません。あなたが最初の成功事例を共有してみませんか？
-                </p>
-              )}
-            </div>
-          </section>
-        )}
-
-        {!hasQuery && bookmarks.length > 0 && (
-          <section>
-            <SectionLabel icon={<Bookmark className="h-3.5 w-3.5" />}>
-              保存したスキル
-              <span className="ml-1 text-[var(--color-muted-foreground)]">
-                — {bookmarks.length} 件
-              </span>
-            </SectionLabel>
-            <div className="grid gap-3 pt-3">{bookmarks.map(renderCase)}</div>
-          </section>
-        )}
-
-        {!hasQuery && (
-          <section>
-            <SectionLabel>業務カテゴリで探す</SectionLabel>
-            <div className="mt-3">
-              <CategoryGrid
-                categories={categories}
-                selected={selectedCategory}
-                onSelect={setSelectedCategory}
+        ) : (
+          <>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="事例を検索（業務・効果・プロンプトなど）"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] py-2.5 pl-9 pr-3 text-sm shadow-sm outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
               />
             </div>
-          </section>
-        )}
 
-        <section>
-          <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />}>
             {hasQuery ? (
-              <>
-                検索結果
-                <span className="ml-1 text-[var(--color-muted-foreground)]">
-                  — 「{trimmedQuery}」に一致 {displayedCases.length} 件
-                </span>
-              </>
+              <section>
+                <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />}>
+                  検索結果
+                  <span className="ml-1 text-[var(--color-muted-foreground)]">
+                    — 「{trimmedQuery}」に一致 {searchResults.length} 件
+                  </span>
+                </SectionLabel>
+                <div className="grid gap-3 pt-3">
+                  {searchResults.map(renderCase)}
+                  {searchResults.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-muted-foreground)]">
+                      {allCases.length === 0
+                        ? "事例を読み込み中…"
+                        : "条件に一致する事例が見つかりません"}
+                    </p>
+                  )}
+                </div>
+              </section>
             ) : (
               <>
-                {selectedCategory ?? "事例"}
-                <span className="ml-1 text-[var(--color-muted-foreground)]">
-                  — {displayedCases.length} 件
-                </span>
+                {today && <TodaySection today={today} />}
+
+                <PainInput clientId={clientId} onResult={handlePainResult} />
+
+                {painResult && (
+                  <section>
+                    <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />}>
+                      あなたの困りごとに近い事例
+                      <span className="ml-1 text-[var(--color-muted-foreground)]">
+                        — 「{painResult.query}」{painResult.cases.length} 件
+                      </span>
+                    </SectionLabel>
+                    <div className="grid gap-3 pt-3">
+                      {painResult.cases.map(renderCase)}
+                      {painResult.cases.length === 0 && (
+                        <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-muted-foreground)]">
+                          近い事例はまだありません。あなたが最初の成功事例を共有してみませんか？
+                        </p>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                <section>
+                  <SectionLabel icon={<Compass className="h-3.5 w-3.5" />}>
+                    業務カテゴリで探す
+                  </SectionLabel>
+                  <div className="mt-3">
+                    <CategoryGrid
+                      categories={categories}
+                      selected={null}
+                      onSelect={openCategory}
+                    />
+                  </div>
+                </section>
+
+                {bookmarks.length > 0 && (
+                  <section>
+                    <SectionLabel icon={<Bookmark className="h-3.5 w-3.5" />}>
+                      保存したスキル
+                      <span className="ml-1 text-[var(--color-muted-foreground)]">
+                        — {bookmarks.length} 件
+                      </span>
+                    </SectionLabel>
+                    <div className="grid gap-3 pt-3">{bookmarks.map(renderCase)}</div>
+                  </section>
+                )}
+
+                {triedCases.length > 0 && (
+                  <section>
+                    <SectionLabel icon={<Heart className="h-3.5 w-3.5" />}>
+                      最近試したもの
+                    </SectionLabel>
+                    <ul className="grid gap-2 pt-2 text-sm">
+                      {triedCases.map((c) => (
+                        <li
+                          key={c.case_id}
+                          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2"
+                        >
+                          <div className="font-medium">{c.owner_label}の事例</div>
+                          <div className="text-xs text-[var(--color-muted-foreground)]">
+                            {c.business_type}・{c.quantitative_effect || "効果未登録"}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                <BoardSection categories={categories.map((c) => c.name)} />
+
+                <ShareForm clientId={clientId} onCreated={handleCaseCreated} />
               </>
             )}
-          </SectionLabel>
-          <div className="grid gap-3 pt-3">
-            {displayedCases.map(renderCase)}
-            {displayedCases.length === 0 && (
-              <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-6 text-center text-sm text-[var(--color-muted-foreground)]">
-                {allCases.length === 0
-                  ? "事例を読み込み中…"
-                  : "条件に一致する事例が見つかりません"}
-              </p>
-            )}
-          </div>
-        </section>
-
-        {!hasQuery && today && <TodaySection today={today} />}
-
-        {!hasQuery && triedCases.length > 0 && (
-          <section>
-            <SectionLabel icon={<Heart className="h-3.5 w-3.5" />}>最近試したもの</SectionLabel>
-            <ul className="grid gap-2 pt-2 text-sm">
-              {triedCases.map((c) => (
-                <li
-                  key={c.case_id}
-                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2"
-                >
-                  <div className="font-medium">{c.owner_label}の事例</div>
-                  <div className="text-xs text-[var(--color-muted-foreground)]">
-                    {c.business_type}・{c.quantitative_effect || "効果未登録"}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
+          </>
         )}
-
-        {!hasQuery && <BoardSection categories={categories.map((c) => c.name)} />}
-
-        {!hasQuery && <ShareForm clientId={clientId} onCreated={handleCaseCreated} />}
 
         <footer className="pb-6 pt-2 text-center text-[11px] text-[var(--color-muted-foreground)]">
           Kodama — Microsoft Agent Hackathon 2026
