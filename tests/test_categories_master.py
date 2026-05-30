@@ -26,7 +26,7 @@ def client() -> Iterator[TestClient]:
 
 
 def _payload(**overrides: object) -> dict:
-    base = {
+    base: dict[str, object] = {
         "client_id": "c-author",
         "owner_label": "テスト部 サンプルさん",
         "business_type": "メール作成",
