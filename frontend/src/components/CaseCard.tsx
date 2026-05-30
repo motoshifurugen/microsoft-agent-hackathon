@@ -1,4 +1,4 @@
-import { Bookmark, Copy, Sparkles, ThumbsUp } from "lucide-react";
+import { Bookmark, Copy, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -6,19 +6,15 @@ import type { CaseDetail } from "@/types/api";
 
 interface CaseCardProps {
   caseDetail: CaseDetail;
-  feedback?: "good" | "soso";
   bookmarked?: boolean;
   onCopy: () => void;
-  onFeedback: (value: "good" | "soso") => void;
   onToggleBookmark?: () => void;
 }
 
 export function CaseCard({
   caseDetail,
-  feedback,
   bookmarked = false,
   onCopy,
-  onFeedback,
   onToggleBookmark,
 }: CaseCardProps) {
   return (
@@ -71,58 +67,12 @@ export function CaseCard({
         </div>
       )}
 
-      <footer className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3">
+      <footer className="mt-3 flex items-center border-t border-[var(--color-border)] pt-3">
         <Button variant="outline" size="sm" onClick={onCopy} disabled={!caseDetail.concrete_prompt}>
           <Copy className="h-3.5 w-3.5" />
           コピーして試す
         </Button>
-        <div className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
-          <span>役立ちましたか？</span>
-          <FeedbackButton
-            label="役立った"
-            active={feedback === "good"}
-            onClick={() => onFeedback("good")}
-          >
-            <ThumbsUp className="h-3.5 w-3.5" />
-          </FeedbackButton>
-          <FeedbackButton
-            label="もう少し"
-            active={feedback === "soso"}
-            onClick={() => onFeedback("soso")}
-          >
-            🤔
-          </FeedbackButton>
-        </div>
       </footer>
     </article>
-  );
-}
-
-function FeedbackButton({
-  label,
-  active,
-  onClick,
-  children,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      title={label}
-      className={cn(
-        "flex h-6 w-6 items-center justify-center rounded-full border text-xs transition-colors",
-        active
-          ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-          : "border-[var(--color-border)] hover:bg-[var(--color-accent)]",
-      )}
-    >
-      {children}
-    </button>
   );
 }

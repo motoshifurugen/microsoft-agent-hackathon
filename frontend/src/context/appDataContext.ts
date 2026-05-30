@@ -3,8 +3,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { CaseDetail, CategorySummary, TodayPick } from "@/types/api";
 
-export type FeedbackValue = "good" | "soso";
-
 export interface AppDataValue {
   clientId: string;
   today: TodayPick | null;
@@ -13,12 +11,10 @@ export interface AppDataValue {
   myCases: CaseDetail[];
   bookmarks: CaseDetail[];
   bookmarkedIds: Set<string>;
-  feedbackByCase: Record<string, string>;
   triedByCase: Record<string, string>;
   copyFlash: string | null;
   toggleBookmark: (caseId: string) => Promise<void>;
   handleCopy: (caseId: string, text: string) => void;
-  handleFeedback: (caseId: string, value: FeedbackValue) => void;
   handleCaseCreated: (created: CaseDetail) => void;
   renderCase: (c: CaseDetail) => ReactNode;
 }

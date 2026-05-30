@@ -3,11 +3,7 @@
 // コピー（試した記録）・検索クエリと、サーバーから取得した事例/カテゴリの元データを保持する。
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CaseCard } from "@/components/CaseCard";
-import {
-  AppDataContext,
-  type AppDataValue,
-  type FeedbackValue,
-} from "@/context/appDataContext";
+import { AppDataContext, type AppDataValue } from "@/context/appDataContext";
 import { useClientId } from "@/hooks/useClientId";
 import { useLocalStorageJson } from "@/hooks/useLocalStorageJson";
 import {
@@ -21,13 +17,11 @@ import {
 } from "@/lib/api";
 import type { CaseDetail, CategorySummary, TodayPick } from "@/types/api";
 
-const FEEDBACK_KEY = "kodama-feedback";
 const TRIED_KEY = "kodama-tried";
 const COPY_FLASH_MS = 1600;
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const clientId = useClientId();
-  const feedback = useLocalStorageJson(FEEDBACK_KEY);
   const tried = useLocalStorageJson(TRIED_KEY);
 
   const [today, setToday] = useState<TodayPick | null>(null);
@@ -88,13 +82,6 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [tried],
   );
 
-  const handleFeedback = useCallback(
-    (caseId: string, value: FeedbackValue) => {
-      feedback.toggle(caseId, value);
-    },
-    [feedback],
-  );
-
   const handleCaseCreated = useCallback((created: CaseDetail) => {
     setAllCases((prev) => [created, ...prev]);
     setMyCases((prev) => [created, ...prev]);
@@ -105,14 +92,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       <CaseCard
         key={c.case_id}
         caseDetail={c}
-        feedback={feedback.value[c.case_id] as FeedbackValue | undefined}
         bookmarked={bookmarkedIds.has(c.case_id)}
         onCopy={() => handleCopy(c.case_id, c.concrete_prompt)}
-        onFeedback={(v) => handleFeedback(c.case_id, v)}
         onToggleBookmark={() => void toggleBookmark(c.case_id)}
       />
     ),
-    [feedback.value, bookmarkedIds, handleCopy, handleFeedback, toggleBookmark],
+    [bookmarkedIds, handleCopy, toggleBookmark],
   );
 
   const value = useMemo<AppDataValue>(
@@ -124,12 +109,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       myCases,
       bookmarks,
       bookmarkedIds,
-      feedbackByCase: feedback.value,
       triedByCase: tried.value,
       copyFlash,
       toggleBookmark,
       handleCopy,
-      handleFeedback,
       handleCaseCreated,
       renderCase,
     }),
@@ -141,12 +124,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       myCases,
       bookmarks,
       bookmarkedIds,
-      feedback.value,
       tried.value,
       copyFlash,
       toggleBookmark,
       handleCopy,
-      handleFeedback,
       handleCaseCreated,
       renderCase,
     ],
