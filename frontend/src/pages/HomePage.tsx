@@ -41,7 +41,7 @@ export function HomePage() {
   return (
     <>
       <PageHeader title="ホーム" />
-      <main className="mx-auto flex w-full max-w-[968px] flex-1 flex-col gap-8 px-6 py-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-6 py-8">
         {hasQuery ? (
           <section>
             <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />}>
