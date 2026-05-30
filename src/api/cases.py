@@ -11,6 +11,7 @@ from dataclasses import asdict
 
 from fastapi import APIRouter, status
 
+from src.api.categories import normalize_category
 from src.api.schemas import CaseCreateRequest, CaseDetail, build_case_detail
 from src.tools.cosmos_io import SuccessCase, seed_success_case
 
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/api/cases", tags=["cases"])
 def create_case(req: CaseCreateRequest) -> CaseDetail:
     case = SuccessCase(
         user_id=req.client_id,
-        business_type=req.business_type,
+        business_type=normalize_category(req.business_type),
         what_worked=req.what_worked,
         why_worked=req.why_worked,
         reproducibility_score=req.reproducibility_score,

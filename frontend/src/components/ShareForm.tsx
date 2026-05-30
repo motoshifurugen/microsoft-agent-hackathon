@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createCase } from "@/lib/api";
+import { createCase, fetchCategoryMaster } from "@/lib/api";
 import type { CaseDetail } from "@/types/api";
 
 interface ShareFormProps {
   clientId: string;
   onCreated: (created: CaseDetail) => void;
 }
+
+// マスタ外を自由入力させるための select 用センチネル値。
+const OTHER = "__other__";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20";
@@ -16,8 +19,11 @@ const inputClass =
 // 必須: owner_label / business_type / what_worked。残りは任意。
 export function ShareForm({ clientId, onCreated }: ShareFormProps) {
   const [open, setOpen] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [ownerLabel, setOwnerLabel] = useState("");
-  const [businessType, setBusinessType] = useState("");
+  // category は select 値 (マスタ値 / OTHER / 空)、customCategory は その他 選択時の自由入力。
+  const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [whatWorked, setWhatWorked] = useState("");
   const [whyWorked, setWhyWorked] = useState("");
   const [concretePrompt, setConcretePrompt] = useState("");
@@ -27,6 +33,14 @@ export function ShareForm({ clientId, onCreated }: ShareFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  useEffect(() => {
+    fetchCategoryMaster()
+      .then(setCategoryOptions)
+      .catch(() => setCategoryOptions([]));
+  }, []);
+
+  const businessType = category === OTHER ? customCategory : category;
+
   const canSubmit =
     ownerLabel.trim().length > 0 &&
     businessType.trim().length > 0 &&
@@ -35,7 +49,8 @@ export function ShareForm({ clientId, onCreated }: ShareFormProps) {
 
   const reset = () => {
     setOwnerLabel("");
-    setBusinessType("");
+    setCategory("");
+    setCustomCategory("");
     setWhatWorked("");
     setWhyWorked("");
     setConcretePrompt("");
@@ -109,13 +124,34 @@ export function ShareForm({ clientId, onCreated }: ShareFormProps) {
 
         <label className="block text-xs font-medium">
           業務カテゴリ <span className="text-[var(--color-destructive)]">*</span>
-          <input
-            value={businessType}
-            onChange={(e) => setBusinessType(e.target.value)}
-            placeholder="例: 週次報告作成"
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
             className={inputClass}
-          />
+          >
+            <option value="" disabled>
+              選択してください
+            </option>
+            {categoryOptions.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+            <option value={OTHER}>その他（自由入力）</option>
+          </select>
         </label>
+
+        {category === OTHER && (
+          <label className="block text-xs font-medium">
+            カテゴリ名（自由入力） <span className="text-[var(--color-destructive)]">*</span>
+            <input
+              value={customCategory}
+              onChange={(e) => setCustomCategory(e.target.value)}
+              placeholder="例: 週次報告作成"
+              className={inputClass}
+            />
+          </label>
+        )}
 
         <label className="block text-xs font-medium">
           うまくいったこと <span className="text-[var(--color-destructive)]">*</span>
