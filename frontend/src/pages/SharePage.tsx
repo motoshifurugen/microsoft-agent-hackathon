@@ -8,7 +8,7 @@ export function SharePage() {
 
   return (
     <>
-      <PageHeader title="事例を共有" subtitle="あなたの成功を、次の誰かの力に" />
+      <PageHeader title="事例を共有" />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
         <ShareForm clientId={clientId} onCreated={handleCaseCreated} />
       </main>

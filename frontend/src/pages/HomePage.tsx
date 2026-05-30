@@ -40,8 +40,8 @@ export function HomePage() {
 
   return (
     <>
-      <PageHeader title="ホーム" subtitle="社内の AI 活用事例を見つけて、すぐ試す" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-8">
+      <PageHeader title="ホーム" />
+      <main className="mx-auto flex w-full max-w-[968px] flex-1 flex-col gap-8 px-6 py-8">
         {hasQuery ? (
           <section>
             <SectionLabel icon={<Sparkles className="h-3.5 w-3.5" />}>

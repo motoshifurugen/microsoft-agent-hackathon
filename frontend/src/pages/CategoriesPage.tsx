@@ -37,7 +37,7 @@ export function CategoriesPage() {
 
   return (
     <>
-      <PageHeader title="カテゴリで探す" subtitle="業務カテゴリから使いこなし事例を探す" />
+      <PageHeader title="カテゴリで探す" />
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 px-6 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">

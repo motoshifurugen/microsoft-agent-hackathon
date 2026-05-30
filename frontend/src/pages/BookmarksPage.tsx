@@ -13,7 +13,7 @@ export function BookmarksPage() {
 
   return (
     <>
-      <PageHeader title="保存したスキル" subtitle="保存した事例と、最近試した事例" />
+      <PageHeader title="保存したスキル" />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-6 py-8">
         <Tabs
           items={[

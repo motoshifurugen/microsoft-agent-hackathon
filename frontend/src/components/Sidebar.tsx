@@ -43,12 +43,7 @@ export function Sidebar() {
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-card)]">
       <NavLink to="/" className="flex items-center gap-2 px-5 py-4">
         <Compass className="h-6 w-6 text-[var(--color-primary)]" />
-        <div className="leading-tight">
-          <div className="text-base font-bold">Kodama</div>
-          <div className="text-[10px] text-[var(--color-muted-foreground)]">
-            社内の小さな成功を、次の誰かの力に
-          </div>
-        </div>
+        <div className="text-base font-bold leading-tight">Kodama</div>
       </NavLink>
 
       <nav className="flex flex-1 flex-col gap-1 px-3 py-2">

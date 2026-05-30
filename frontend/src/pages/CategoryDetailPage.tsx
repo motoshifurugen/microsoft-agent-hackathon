@@ -21,7 +21,7 @@ export function CategoryDetailPage() {
 
   return (
     <>
-      <PageHeader title={category} subtitle="再現性の高い順に表示" />
+      <PageHeader title={category} />
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-8">
         <CategoryView
           category={category}
