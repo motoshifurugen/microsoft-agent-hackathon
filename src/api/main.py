@@ -34,6 +34,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from src.api.admin import router as admin_router
+from src.api.agent_chat import router as agent_chat_router
 from src.api.board import router as board_router
 from src.api.board import seed_sample_board
 from src.api.bookmarks import router as bookmarks_router
@@ -41,7 +42,7 @@ from src.api.cases import router as cases_router
 from src.api.employee import router as employee_router
 from src.api.pain import router as pain_router
 from src.tools.cosmos_io import reset_in_memory_stores
-from src.tools.seed import load_success_cases
+from src.tools.seed import load_cold_start_templates, load_success_cases
 
 _logger = logging.getLogger(__name__)
 
@@ -66,6 +67,9 @@ async def _lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
 
     # 掲示板にサンプル質問を投入 (空表示を避けるため)
     seed_sample_board()
+
+    # AIに相談チャットの Orchestrator が Cold Start テンプレを参照するため投入する。
+    load_cold_start_templates()
 
     yield
 
@@ -99,6 +103,7 @@ app.include_router(board_router)
 app.include_router(pain_router)
 app.include_router(bookmarks_router)
 app.include_router(cases_router)
+app.include_router(agent_chat_router)
 
 # Vite ビルド成果物 (frontend/dist) を静的配信。Container では /app/frontend_dist にコピーされる前提。
 # ローカルでは frontend/dist ディレクトリがあれば配信、無ければ Vite dev server を別途使う。

@@ -8,7 +8,6 @@ import type {
   CaseDetail,
   CategoryCasesResponse,
   CategorySummary,
-  PainMatchResponse,
   RecommendationResponse,
   StrategyExecuteResponse,
   StrategyId,
@@ -61,12 +60,69 @@ export const fetchMyCases = (clientId: string): Promise<CaseDetail[]> =>
 
 export const fetchToday = (): Promise<TodayPick> => getJson("/today");
 
-export const matchPain = (payload: {
-  text: string;
-  client_id?: string;
-  business_context?: string;
-  top_k?: number;
-}): Promise<PainMatchResponse> => postJson("/pain/match", payload);
+// AIに相談チャット。/api/agent/chat の SSE を ReadableStream で受信し、トークンを逐次中継する。
+export interface AgentChatHandlers {
+  onToken: (text: string) => void;
+  onDone: () => void;
+  onError: (message: string) => void;
+}
+
+export async function streamAgentChat(
+  payload: { message: string; client_id?: string },
+  handlers: AgentChatHandlers,
+  signal?: AbortSignal,
+): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/agent/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal,
+    });
+  } catch {
+    handlers.onError("AI への接続に失敗しました");
+    return;
+  }
+
+  if (!res.ok || !res.body) {
+    handlers.onError(`チャットの開始に失敗しました (${res.status})`);
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  const dispatch = (raw: string) => {
+    const line = raw.trim();
+    if (!line.startsWith("data:")) return;
+    const body = line.slice(5).trim();
+    if (!body) return;
+    try {
+      const evt = JSON.parse(body) as { type: string; text?: string; message?: string };
+      if (evt.type === "token" && evt.text) handlers.onToken(evt.text);
+      else if (evt.type === "done") handlers.onDone();
+      else if (evt.type === "error") handlers.onError(evt.message ?? "エラーが発生しました");
+    } catch {
+      // 不完全な JSON は無視 (次チャンクで補完される)
+    }
+  };
+
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() ?? "";
+      for (const part of parts) dispatch(part);
+    }
+    if (buffer.trim()) dispatch(buffer);
+  } catch {
+    handlers.onError("ストリームの受信中にエラーが発生しました");
+  }
+}
 
 // Skill ブックマーク (サーバー側永続)。いずれも当該 client_id の保存事例一覧を返す。
 // 成功事例の登録 (共有フォーム)

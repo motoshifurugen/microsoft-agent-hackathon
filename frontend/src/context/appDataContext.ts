@@ -16,8 +16,6 @@ export interface AppDataValue {
   feedbackByCase: Record<string, string>;
   triedByCase: Record<string, string>;
   copyFlash: string | null;
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
   toggleBookmark: (caseId: string) => Promise<void>;
   handleCopy: (caseId: string, text: string) => void;
   handleFeedback: (caseId: string, value: FeedbackValue) => void;

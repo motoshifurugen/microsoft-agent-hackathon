@@ -36,7 +36,6 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [myCases, setMyCases] = useState<CaseDetail[]>([]);
   const [bookmarks, setBookmarks] = useState<CaseDetail[]>([]);
   const [copyFlash, setCopyFlash] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchToday()
@@ -128,8 +127,6 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       feedbackByCase: feedback.value,
       triedByCase: tried.value,
       copyFlash,
-      searchQuery,
-      setSearchQuery,
       toggleBookmark,
       handleCopy,
       handleFeedback,
@@ -147,7 +144,6 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       feedback.value,
       tried.value,
       copyFlash,
-      searchQuery,
       toggleBookmark,
       handleCopy,
       handleFeedback,

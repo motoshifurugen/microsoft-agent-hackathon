@@ -1,5 +1,4 @@
-// 各ページ共通のヘッダ。タイトルと、右側に検索バー・テーマ切替を置く。
-import { SearchBar } from "@/components/SearchBar";
+// 各ページ共通のヘッダ。タイトルと、右側にテーマ切替を置く。
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAppData } from "@/context/appDataContext";
 
@@ -20,14 +19,8 @@ export function PageHeader({ title }: PageHeaderProps) {
           {copyFlash && (
             <span className="hidden text-xs text-[var(--color-primary)] sm:inline">{copyFlash}</span>
           )}
-          <div className="hidden md:block">
-            <SearchBar />
-          </div>
           <ThemeToggle />
         </div>
-      </div>
-      <div className="border-t border-[var(--color-border)] px-6 py-2 md:hidden">
-        <SearchBar />
       </div>
     </header>
   );
