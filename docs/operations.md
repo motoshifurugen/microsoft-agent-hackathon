@@ -263,6 +263,52 @@ az rest --method GET \
 
 ---
 
+## 7.5 Slack「はてなボックス」連携 (Socket Mode)
+
+`#はてなボックス` の投稿を検知し、業務カテゴリを推定して Kodama 画面へ誘導するスレッド返信を返す。
+FastAPI (`src.api.main:app`) の lifespan からバックグラウンド起動するため、専用プロセスは不要。
+
+### 7.5.1 Slack App 側の設定
+
+1. <https://api.slack.com/apps> で App を作成
+2. **Socket Mode** を有効化 → App-Level Token (`xapp-...`) を発行 (scope: `connections:write`)
+3. **OAuth & Permissions** → Bot Token Scopes に最小限を付与: `channels:history`, `chat:write`
+4. **Event Subscriptions** → Subscribe to bot events に `message.channels` を追加
+5. ワークスペースにインストール → Bot User OAuth Token (`xoxb-...`) を取得
+6. Bot を `#はてなボックス` に招待 (`/invite @<bot>`)
+7. チャネル ID (`C...`) を控える (チャネル名右クリック → リンクをコピー の末尾)
+
+### 7.5.2 環境変数 (`.env`)
+
+```bash
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_APP_TOKEN=xapp-...
+SLACK_HATENA_CHANNEL_ID=C0123456789
+KODAMA_BASE_URL=http://localhost:8000   # 本番は公開 URL
+```
+
+3 つ (BOT/APP/CHANNEL_ID) が揃ったときだけ Bot を起動する。未設定なら API のみで動作 (既存デモ・CI に影響なし)。
+
+### 7.5.3 起動と動作確認
+
+```bash
+# FastAPI 起動 (Bot は lifespan で自動起動)
+uv run uvicorn src.api.main:app --reload
+```
+
+`#はてなボックス` に「月次レポートだりい」と投稿 → スレッドに Kodama URL 付きの返信が返れば OK。
+「今日は疲れた」のような業務外投稿には返信しない。
+
+Slack 無しでの確認 (デモ用 mock):
+
+```bash
+curl -s localhost:8000/api/slack/mock -H 'Content-Type: application/json' \
+  -d '{"text":"月次レポートだりい","display_name":"細川さん"}' | jq
+curl -s localhost:8000/api/signals | jq   # 検知済みシグナル一覧
+```
+
+---
+
 ## 8. トラブルシュート
 
 ### 8.1 公開 URL に繋がらない (HTTP 000 や 502)
