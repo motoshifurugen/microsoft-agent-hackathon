@@ -24,6 +24,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -42,10 +43,33 @@ from src.api.bookmarks import router as bookmarks_router
 from src.api.cases import router as cases_router
 from src.api.employee import router as employee_router
 from src.api.pain import router as pain_router
+from src.api.signals import router as signals_router
+from src.signals.config import load_slack_config
 from src.tools.cosmos_io import reset_in_memory_stores
 from src.tools.seed import load_cold_start_templates, load_success_cases
 
 _logger = logging.getLogger(__name__)
+
+
+async def _maybe_start_slack_bot() -> asyncio.Task | None:
+    """Slack env が揃っていれば Socket Mode Bot をバックグラウンド起動する。
+
+    env 未設定なら何もしない (既存のデモ・CI に影響しない)。起動失敗しても
+    例外を握りつぶし、API 全体は落とさない。
+    """
+    config = load_slack_config()
+    if not config.enabled:
+        _logger.info("Slack env not set; running without Slack bot (API-only)")
+        return None
+    try:
+        from src.slack.bot import run_slack_bot
+
+        task = asyncio.create_task(run_slack_bot(config))
+        _logger.info("Slack bot task scheduled for channel %s", config.channel_id)
+        return task
+    except Exception:
+        _logger.exception("failed to start Slack bot; continuing without it")
+        return None
 
 
 @asynccontextmanager
@@ -72,7 +96,22 @@ async def _lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     # AIに相談チャットの Orchestrator が Cold Start テンプレを参照するため投入する。
     load_cold_start_templates()
 
+    # Slack「はてなボックス」連携 (env が揃っているときのみ起動)。
+    slack_task = await _maybe_start_slack_bot()
+
     yield
+
+    # shutdown: Slack バックグラウンドタスクを止める。
+    # 接続失敗等でタスクが既に例外終了している場合でも、shutdown を止めないよう
+    # CancelledError 以外の例外はログに留めて伝播させない。
+    if slack_task is not None:
+        slack_task.cancel()
+        try:
+            await slack_task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            _logger.exception("Slack bot task ended with an error")
 
 
 app = FastAPI(
@@ -105,6 +144,7 @@ app.include_router(pain_router)
 app.include_router(bookmarks_router)
 app.include_router(cases_router)
 app.include_router(agent_chat_router)
+app.include_router(signals_router)
 
 
 class SPAStaticFiles(StaticFiles):

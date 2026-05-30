@@ -13,6 +13,7 @@ dependencies = [
     "httpx>=0.28.0",
     "openai>=1.50.0",
     "python-dotenv>=1.0.1",
+    "slack-bolt>=1.21.0",
     "uvicorn>=0.47.0",
 ]
 
