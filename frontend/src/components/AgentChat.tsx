@@ -23,15 +23,21 @@ const nextId = () => `m${messageSeq++}`;
 
 interface AgentChatProps {
   clientId: string;
+  /** FollowUpCard 等から外部供給される自動送信メッセージ。null で何もしない。 */
+  pendingMessage?: string | null;
+  /** pendingMessage を送信したら呼ぶ（親側で null に戻すため）。 */
+  onPendingConsumed?: () => void;
 }
 
-export function AgentChat({ clientId }: AgentChatProps) {
+export function AgentChat({ clientId, pendingMessage, onPendingConsumed }: AgentChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // send を effect 依存に入れると毎レンダーで再実行されるため ref 経由で最新版を参照する。
+  const sendRef = useRef<(raw: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -80,6 +86,18 @@ export function AgentChat({ clientId }: AgentChatProps) {
       controller.signal,
     );
   };
+
+  // send は毎レンダー再生成されるため、最新版を ref に保持する（effect 依存の churn 回避）。
+  useEffect(() => {
+    sendRef.current = send;
+  });
+
+  // 外部供給メッセージ（FollowUpCard の「共有する」）を、ストリーミング中でなければ自動送信する。
+  useEffect(() => {
+    if (!pendingMessage || streaming) return;
+    void sendRef.current(pendingMessage);
+    onPendingConsumed?.();
+  }, [pendingMessage, streaming, onPendingConsumed]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
