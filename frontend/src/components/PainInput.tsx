@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircleQuestion } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { matchPain } from "@/lib/api";
 import type { CaseDetail } from "@/types/api";
@@ -8,6 +8,9 @@ interface PainInputProps {
   clientId: string;
   onResult: (query: string, cases: CaseDetail[]) => void;
 }
+
+const MAX_LEN = 200;
+const FAQ_CHIPS = ["議事録要約", "提案書", "集計"];
 
 // ユーザーが自分の困りごとを自由入力し、類似事例を引き出す入力欄。
 // メール監視を廃止した代わりの、明示的な困りごと収集経路。
@@ -34,25 +37,51 @@ export function PainInput({ clientId, onResult }: PainInputProps) {
   };
 
   return (
-    <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm">
-      <div className="flex items-center gap-1.5 text-sm font-semibold">
-        <MessageCircleQuestion className="h-4 w-4 text-[var(--color-primary)]" />
-        いま困っていることは？
+    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-card">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary-subtle)] text-[var(--color-primary)]">
+          <MessageCircle className="h-5 w-5" />
+        </span>
+        <div>
+          <div className="text-[15px] font-semibold leading-tight">いま困っていることは？</div>
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            書くと、似た成功事例を探します
+          </p>
+        </div>
       </div>
-      <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-        業務の困りごとを書くと、社内の似た成功事例を探します。
-      </p>
+
       <textarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => setText(e.target.value.slice(0, MAX_LEN))}
         rows={3}
-        placeholder="例: 毎月の月次レポート作成に時間がかかって困っている"
-        className="mt-3 w-full resize-y rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
+        maxLength={MAX_LEN}
+        placeholder="例: 毎月の月次レポート作成に時間がかかって困っている…"
+        className="mt-3 w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
       />
+      <div className="mt-1 text-right font-mono text-[10px] text-[var(--color-muted-foreground)]">
+        {text.length} / {MAX_LEN}
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] text-[var(--color-muted-foreground)]">よくある質問:</span>
+        {FAQ_CHIPS.map((chip) => (
+          <button
+            key={chip}
+            type="button"
+            onClick={() => setText(chip)}
+            className="rounded-full bg-[var(--color-muted)] px-3 py-1 text-xs text-[var(--color-secondary-foreground)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)]"
+          >
+            {chip}
+          </button>
+        ))}
+      </div>
+
       {error && <p className="mt-2 text-xs text-[var(--color-destructive)]">{error}</p>}
+
       <div className="mt-3 flex justify-end">
         <Button size="sm" onClick={() => void handleSubmit()} disabled={!canSubmit}>
           {submitting ? "探しています…" : "似た事例を探す"}
+          <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </section>

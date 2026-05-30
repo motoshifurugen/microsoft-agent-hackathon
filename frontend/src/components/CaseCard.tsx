@@ -65,13 +65,13 @@ export function CaseCard({
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]">
             使えるプロンプト
           </div>
-          <p className="whitespace-pre-wrap text-xs leading-relaxed">
+          <p className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
             {caseDetail.concrete_prompt}
           </p>
         </div>
       )}
 
-      <footer className="mt-3 flex items-center justify-between gap-2">
+      <footer className="mt-3 flex items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3">
         <Button variant="outline" size="sm" onClick={onCopy} disabled={!caseDetail.concrete_prompt}>
           <Copy className="h-3.5 w-3.5" />
           コピーして試す
