@@ -52,6 +52,9 @@ export const fetchCategories = (): Promise<CategorySummary[]> => getJson("/categ
 export const fetchCasesInCategory = (name: string): Promise<CategoryCasesResponse> =>
   getJson(`/categories/${encodeURIComponent(name)}/cases`);
 
+// 登録セレクト用の固定カテゴリマスタ (表示順)。
+export const fetchCategoryMaster = (): Promise<string[]> => getJson("/categories/master");
+
 export const fetchToday = (): Promise<TodayPick> => getJson("/today");
 
 export const matchPain = (payload: {
