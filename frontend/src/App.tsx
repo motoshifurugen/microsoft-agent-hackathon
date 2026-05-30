@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Bookmark, Compass, Heart, Search, Sparkles } from "lucide-react";
+import { Bookmark, Compass, Heart, PenLine, Search, Sparkles } from "lucide-react";
 import { BoardSection } from "@/components/BoardSection";
 import { CaseCard } from "@/components/CaseCard";
 import { CategoryGrid } from "@/components/CategoryGrid";
@@ -16,6 +16,7 @@ import {
   fetchBookmarks,
   fetchCasesInCategory,
   fetchCategories,
+  fetchMyCases,
   fetchToday,
   removeBookmark,
 } from "@/lib/api";
@@ -34,6 +35,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [painResult, setPainResult] = useState<{ query: string; cases: CaseDetail[] } | null>(null);
   const [bookmarks, setBookmarks] = useState<CaseDetail[]>([]);
+  const [myCases, setMyCases] = useState<CaseDetail[]>([]);
   const [view, setView] = useState<View>({ name: "home" });
 
   const clientId = useClientId();
@@ -63,6 +65,10 @@ export default function App() {
     fetchBookmarks(clientId)
       .then(setBookmarks)
       .catch(() => setBookmarks([]));
+
+    fetchMyCases(clientId)
+      .then(setMyCases)
+      .catch(() => setMyCases([]));
   }, [clientId]);
 
   const goHome = useCallback(() => {
@@ -111,6 +117,7 @@ export default function App() {
 
   const handleCaseCreated = useCallback((created: CaseDetail) => {
     setAllCases((prev) => [created, ...prev]);
+    setMyCases((prev) => [created, ...prev]);
   }, []);
 
   const trimmedQuery = searchQuery.trim();
@@ -268,6 +275,18 @@ export default function App() {
                       </span>
                     </SectionLabel>
                     <div className="grid gap-3 pt-3">{bookmarks.map(renderCase)}</div>
+                  </section>
+                )}
+
+                {myCases.length > 0 && (
+                  <section>
+                    <SectionLabel icon={<PenLine className="h-3.5 w-3.5" />}>
+                      自分が登録したスキル
+                      <span className="ml-1 text-[var(--color-muted-foreground)]">
+                        — {myCases.length} 件
+                      </span>
+                    </SectionLabel>
+                    <div className="grid gap-3 pt-3">{myCases.map(renderCase)}</div>
                   </section>
                 )}
 

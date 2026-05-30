@@ -86,3 +86,36 @@ class TestCreateCase:
     def test_reproducibility_out_of_range_rejected(self, client: TestClient) -> None:
         res = client.post("/api/cases", json=_valid_payload(reproducibility_score=1.5))
         assert res.status_code == 422
+
+
+class TestListMyCases:
+    def test_returns_only_callers_cases(self, client: TestClient) -> None:
+        client.post("/api/cases", json=_valid_payload(client_id="c-A", business_type="メール作成"))
+        client.post("/api/cases", json=_valid_payload(client_id="c-A", business_type="提案書作成"))
+        client.post("/api/cases", json=_valid_payload(client_id="c-B", business_type="データ集計"))
+
+        res = client.get("/api/cases", params={"client_id": "c-A"})
+        assert res.status_code == 200
+        body = res.json()
+        assert len(body) == 2
+        assert {c["business_type"] for c in body} == {"メール作成", "提案書作成"}
+
+    def test_unknown_client_returns_empty(self, client: TestClient) -> None:
+        # seed 事例の user_id とは一致しない client_id
+        res = client.get("/api/cases", params={"client_id": "c-nobody"})
+        assert res.status_code == 200
+        assert res.json() == []
+
+    def test_newest_registered_first(self, client: TestClient) -> None:
+        client.post("/api/cases", json=_valid_payload(client_id="c-A", business_type="メール作成"))
+        client.post("/api/cases", json=_valid_payload(client_id="c-A", business_type="提案書作成"))
+        body = client.get("/api/cases", params={"client_id": "c-A"}).json()
+        assert [c["business_type"] for c in body] == ["提案書作成", "メール作成"]
+
+    def test_blank_client_id_rejected(self, client: TestClient) -> None:
+        res = client.get("/api/cases", params={"client_id": ""})
+        assert res.status_code == 422
+
+    def test_missing_client_id_rejected(self, client: TestClient) -> None:
+        res = client.get("/api/cases")
+        assert res.status_code == 422
