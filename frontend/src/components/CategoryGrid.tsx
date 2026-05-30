@@ -25,8 +25,9 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   コードレビュー: Code2,
   問い合わせ対応: HelpCircle,
   データ集計: BarChart3,
+  アンケート集計: BarChart3,
   メール作成: Mail,
-  経費精算チェック: Receipt,
+  経費精算: Receipt,
 };
 
 // カテゴリ名 → 装飾コピー（design.pen 由来）。未知カテゴリはフォールバックを使う。
@@ -37,8 +38,9 @@ const CATEGORY_DESC: Record<string, string> = {
   コードレビュー: "観点別の懸念リスト出力",
   問い合わせ対応: "一次返信の半自動化",
   データ集計: "CSV からの自動集計",
+  アンケート集計: "回答の自動集計・傾向抽出",
   メール作成: "返信テンプレートで省力化",
-  経費精算チェック: "領収書 OCR からチェック表へ",
+  経費精算: "領収書 OCR からチェック表へ",
 };
 
 const DESC_FALLBACK = "AI 活用の事例を見る";
