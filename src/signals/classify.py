@@ -41,6 +41,10 @@ _REPLY_HINTS: dict[str, str] = {
 
 _DEFAULT_HINT = "近い事例とすぐ使えるプロンプトがあります"
 
+# LLM 分類器 (llm_classify) と共有する既知カテゴリ集合。ルール分類器と同一ソースにすることで、
+# LLM が CATEGORY_MASTER 外のカテゴリを返したときに検出・除外できる。
+KNOWN_CATEGORIES: tuple[str, ...] = tuple(_CATEGORY_KEYWORDS.keys())
+
 
 @dataclass(frozen=True)
 class Classification:

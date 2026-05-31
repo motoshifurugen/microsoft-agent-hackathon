@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from src.signals.classify import build_kodama_url, classify
+from src.signals.classify import build_kodama_url
+from src.signals.llm_classify import classify_with_llm
 from src.signals.store import Signal, add_signal
 
 
@@ -37,7 +38,7 @@ def handle_message(
     Returns:
         登録 (or 既存) の Signal。無視した場合は None。
     """
-    result = classify(text)
+    result = classify_with_llm(text)
     if result is None:
         return None
 
