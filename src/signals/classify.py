@@ -94,15 +94,15 @@ def classify(text: str) -> Classification | None:
     )
 
 
-def build_kodama_url(base_url: str, category: str, signal_id: str) -> str:
+def build_kodama_url(base_url: str, category: str, signal_id: str, source: str = "slack") -> str:
     """カテゴリ詳細画面 (/categories/{name}) への URL を組み立てる。
 
     フロントの React Router ルート `categories/:name` に合わせ、カテゴリ名 (日本語) を
-    パスに URL エンコードして埋め込む。source=slack と signal_id をクエリに付与する。
+    パスに URL エンコードして埋め込む。検知元 (slack / teams) と signal_id をクエリに付与する。
     """
     base = base_url.rstrip("/")
     path = quote(category, safe="")
-    query = urlencode({"source": "slack", "signal_id": signal_id})
+    query = urlencode({"source": source, "signal_id": signal_id})
     return f"{base}/categories/{path}?{query}"
 
 

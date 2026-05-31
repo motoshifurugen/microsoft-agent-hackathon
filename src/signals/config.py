@@ -30,6 +30,14 @@ class SlackConfig:
         return bool(self.bot_token and self.app_token and self.channel_id)
 
 
+def load_kodama_base_url() -> str:
+    """ダッシュボードの公開 URL を解決する (Slack / Teams 共通、プラットフォーム非依存)。"""
+    return (
+        os.environ.get("KODAMA_BASE_URL", DEFAULT_KODAMA_BASE_URL).strip()
+        or DEFAULT_KODAMA_BASE_URL
+    )
+
+
 def load_slack_config() -> SlackConfig:
     """環境変数から Slack 設定を読み込む (欠落していても例外は投げない)。
 
@@ -40,6 +48,5 @@ def load_slack_config() -> SlackConfig:
         app_token=os.environ.get("SLACK_APP_TOKEN", "").strip(),
         channel_id=os.environ.get("SLACK_HATENA_CHANNEL_ID", "").strip(),
         channel_name=os.environ.get("SLACK_HATENA_CHANNEL_NAME", DEFAULT_CHANNEL_NAME).strip(),
-        kodama_base_url=os.environ.get("KODAMA_BASE_URL", DEFAULT_KODAMA_BASE_URL).strip()
-        or DEFAULT_KODAMA_BASE_URL,
+        kodama_base_url=load_kodama_base_url(),
     )
