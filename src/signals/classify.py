@@ -41,6 +41,10 @@ _REPLY_HINTS: dict[str, str] = {
 
 _DEFAULT_HINT = "近い事例とすぐ使えるプロンプトがあります"
 
+# LLM 分類器 (llm_classify) と共有する既知カテゴリ集合。ルール分類器と同一ソースにすることで、
+# LLM が CATEGORY_MASTER 外のカテゴリを返したときに検出・除外できる。
+KNOWN_CATEGORIES: tuple[str, ...] = tuple(_CATEGORY_KEYWORDS.keys())
+
 
 @dataclass(frozen=True)
 class Classification:
@@ -94,15 +98,15 @@ def classify(text: str) -> Classification | None:
     )
 
 
-def build_kodama_url(base_url: str, category: str, signal_id: str) -> str:
+def build_kodama_url(base_url: str, category: str, signal_id: str, source: str = "slack") -> str:
     """カテゴリ詳細画面 (/categories/{name}) への URL を組み立てる。
 
     フロントの React Router ルート `categories/:name` に合わせ、カテゴリ名 (日本語) を
-    パスに URL エンコードして埋め込む。source=slack と signal_id をクエリに付与する。
+    パスに URL エンコードして埋め込む。検知元 (slack / teams) と signal_id をクエリに付与する。
     """
     base = base_url.rstrip("/")
     path = quote(category, safe="")
-    query = urlencode({"source": "slack", "signal_id": signal_id})
+    query = urlencode({"source": source, "signal_id": signal_id})
     return f"{base}/categories/{path}?{query}"
 
 

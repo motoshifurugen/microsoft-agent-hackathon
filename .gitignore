@@ -53,3 +53,6 @@ Thumbs.db
 # Playwright MCP のページスナップショット (ローカル検証用)
 .playwright-mcp/
 *.png
+
+# ただし記事・ドキュメント用の画像は追跡する
+!docs/images/**

@@ -15,6 +15,7 @@
 - /api/admin/users/{id}/recommendations  推薦事例 + 戦略 A/B (管理者)
 - /api/admin/strategies/{id}/execute 戦略実行プレビュー (管理者)
 - /api/admin/executions              実行履歴 (管理者)
+- /api/teams/messages                Teams (Bot Framework) 発話の受信 → 検知 → 返信 Activity
 
 設計方針:
 - データ層 (src/tools/) は Chainlit と共通
@@ -44,6 +45,7 @@ from src.api.cases import router as cases_router
 from src.api.employee import router as employee_router
 from src.api.pain import router as pain_router
 from src.api.signals import router as signals_router
+from src.api.teams import router as teams_router
 from src.signals.config import load_slack_config
 from src.tools.cosmos_io import reset_in_memory_stores
 from src.tools.seed import load_cold_start_templates, load_success_cases
@@ -145,6 +147,7 @@ app.include_router(bookmarks_router)
 app.include_router(cases_router)
 app.include_router(agent_chat_router)
 app.include_router(signals_router)
+app.include_router(teams_router)
 
 
 class SPAStaticFiles(StaticFiles):
