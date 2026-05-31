@@ -26,6 +26,10 @@ _AAD_SCOPE = "https://cognitiveservices.azure.com/.default"
 _API_VERSION = "2024-08-01-preview"
 _DEFAULT_DEPLOYMENT = "gpt-4o-mini"
 _NONE_LABEL = "none"
+# 回線断時に SDK 既定 (timeout 600s / retries 2) で長時間ブロックせず、素早くルール分類に
+# fallback させるための fail-fast 設定 (embed.py と同じ思想)。
+_REQUEST_TIMEOUT = 10.0
+_MAX_RETRIES = 0
 
 _client = None  # type: ignore[var-annotated]
 
@@ -55,6 +59,8 @@ def _get_client():  # type: ignore[no-untyped-def]
             azure_endpoint=_build_openai_endpoint(),
             api_version=_API_VERSION,
             azure_ad_token_provider=token_provider,
+            timeout=_REQUEST_TIMEOUT,
+            max_retries=_MAX_RETRIES,
         )
     return _client
 

@@ -19,6 +19,10 @@ from src.tools.credential import get_default_credential
 _AAD_SCOPE = "https://cognitiveservices.azure.com/.default"
 _API_VERSION = "2024-02-01"
 _DEFAULT_DEPLOYMENT = "text-embedding-3-small"
+# 回線断時に SDK 既定 (timeout 600s / retries 2) で長時間ブロックせず、素早く呼び出し側の
+# fallback (文字列マッチ) に落とすための fail-fast 設定。
+_REQUEST_TIMEOUT = 10.0
+_MAX_RETRIES = 0
 
 _client: AzureOpenAI | None = None
 
@@ -49,6 +53,8 @@ def _get_client() -> AzureOpenAI:
             azure_endpoint=_build_openai_endpoint(),
             api_version=_API_VERSION,
             azure_ad_token_provider=token_provider,
+            timeout=_REQUEST_TIMEOUT,
+            max_retries=_MAX_RETRIES,
         )
     return _client
 
