@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from src.tools.case_writer import build_embedding_text
 from src.tools.cosmos_io import (
     ColdStartTemplate,
     SuccessCase,
@@ -23,14 +24,6 @@ DEFAULT_SEED_PATH = (
 DEFAULT_TEMPLATE_PATH = (
     Path(__file__).resolve().parents[2] / "docs" / "sample_data" / "cold_start_templates.json"
 )
-
-
-def _build_embedding_text(case: SuccessCase) -> str:
-    """成功事例を embedding 化するときのテキスト表現。
-
-    business_type と what_worked を結合し、検索クエリとの類似度が出やすい形にする。
-    """
-    return f"{case.business_type}\n{case.what_worked}"
 
 
 def load_success_cases(path: Path | None = None, with_embeddings: bool = False) -> int:
@@ -89,7 +82,7 @@ def load_success_cases(path: Path | None = None, with_embeddings: bool = False) 
         )
         seed_success_case(case)
         if with_embeddings and embed_text is not None:
-            vector = embed_text(_build_embedding_text(case))
+            vector = embed_text(build_embedding_text(case))
             register_embedding(case.id, vector)
         count += 1
 

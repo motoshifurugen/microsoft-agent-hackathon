@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# グローバル gitignore の `lib/` がソースの src/lib を巻き込むため明示的に再包含する
+!src/lib/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

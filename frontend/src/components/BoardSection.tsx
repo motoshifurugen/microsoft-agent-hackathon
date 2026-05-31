@@ -5,9 +5,8 @@
 // - 質問カードをクリックで詳細展開
 // - 詳細パネルで回答リスト + 回答投稿
 // - フッター付近に「+ 質問する」ボタンで投稿フォームを開く
-import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, MessageSquare, Plus, Send } from "lucide-react";
-import { SectionLabel } from "@/components/SectionLabel";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronRight, Plus, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +27,14 @@ export function BoardSection({ categories }: BoardSectionProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [detail, setDetail] = useState<BoardQuestionDetail | null>(null);
   const [composing, setComposing] = useState(false);
+  // "すべて" | "未回答" | カテゴリ名
+  const [filter, setFilter] = useState<string>("すべて");
+
+  const filteredQuestions = useMemo(() => {
+    if (filter === "すべて") return questions;
+    if (filter === "未回答") return questions.filter((q) => q.answer_count === 0);
+    return questions.filter((q) => q.business_category === filter);
+  }, [questions, filter]);
 
   const reload = useCallback(async () => {
     try {
@@ -54,36 +61,51 @@ export function BoardSection({ categories }: BoardSectionProps) {
 
   return (
     <section>
-      <div className="flex items-center justify-between">
-        <SectionLabel>
-          <MessageSquare className="h-3.5 w-3.5" />
-          困りごと掲示板 ({questions.length})
-        </SectionLabel>
-        <Button variant="outline" size="sm" onClick={() => setComposing(true)}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {["すべて", "未回答", ...categories].map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                filter === f
+                  ? "border-[var(--color-foreground)] bg-[var(--color-foreground)] text-[var(--color-background)]"
+                  : "border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-secondary-foreground)] hover:bg-[var(--color-muted)]",
+              )}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <Button size="sm" onClick={() => setComposing(true)}>
           <Plus className="h-3.5 w-3.5" />
-          質問する
+          質問を投稿
         </Button>
       </div>
 
-      <div className="mt-2 grid gap-2">
-        {questions.map((q) => (
+      <div className="mt-3 grid gap-2">
+        {filteredQuestions.map((q) => (
           <button
             key={q.id}
             type="button"
             onClick={() => setOpenId((current) => (current === q.id ? null : q.id))}
             className={cn(
-              "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-left transition-colors",
+              "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2.5 text-left transition-colors",
               "hover:bg-[var(--color-accent)]",
               openId === q.id && "border-[var(--color-primary)]",
             )}
           >
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="text-sm font-medium leading-snug">{q.title}</div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-[var(--color-muted-foreground)]">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <StatusPill answerCount={q.answer_count} />
+                  <span className="truncate text-sm font-medium leading-snug">{q.title}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[var(--color-muted-foreground)]">
                   <span>by {q.author}</span>
                   {q.business_category && <Badge variant="muted">{q.business_category}</Badge>}
-                  <span>回答 {q.answer_count} 件</span>
                 </div>
               </div>
               <ChevronRight
@@ -108,9 +130,11 @@ export function BoardSection({ categories }: BoardSectionProps) {
             )}
           </button>
         ))}
-        {questions.length === 0 && (
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            まだ質問はありません。最初の 1 件を投稿してみませんか？
+        {filteredQuestions.length === 0 && (
+          <p className="rounded-lg border border-dashed border-[var(--color-border)] px-4 py-8 text-center text-sm text-[var(--color-muted-foreground)]">
+            {questions.length === 0
+              ? "まだ質問はありません。最初の 1 件を投稿してみませんか？"
+              : "この条件に一致する質問はありません。"}
           </p>
         )}
       </div>
@@ -123,6 +147,22 @@ export function BoardSection({ categories }: BoardSectionProps) {
         />
       )}
     </section>
+  );
+}
+
+function StatusPill({ answerCount }: { answerCount: number }) {
+  const answered = answerCount > 0;
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+        answered
+          ? "bg-[var(--color-success-subtle)] text-[var(--color-success)]"
+          : "bg-[var(--color-destructive-subtle)] text-[var(--color-destructive)]",
+      )}
+    >
+      {answered ? `回答${answerCount}件` : "未回答"}
+    </span>
   );
 }
 

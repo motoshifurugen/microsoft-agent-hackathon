@@ -1,4 +1,4 @@
-"""5 Agent (Orchestrator + 4 子) を Foundry に作成し、ConnectedAgentTool で結合する。
+"""4 Agent (Orchestrator + 3 子) を Foundry に作成し、ConnectedAgentTool で結合する。
 
 実行例:
     PROJECT_ENDPOINT=https://<foundry>.services.ai.azure.com/api/projects/<project> \\
@@ -7,7 +7,6 @@
 
 出力された AGENT_ID_* を `.env` に転記する:
     AGENT_ID=<orchestrator id>           # 後方互換: src/app.py は AGENT_ID を Orchestrator として参照
-    AGENT_ID_OBSERVER=<observer id>
     AGENT_ID_COLLECTOR=<collector id>
     AGENT_ID_MATCHER=<matcher id>
     AGENT_ID_PROPOSER=<proposer id>
@@ -33,7 +32,7 @@ from azure.ai.agents.models import (
 from azure.identity import AzureCliCredential
 from dotenv import load_dotenv
 
-from src.agents import collector, matcher, observer, proposer
+from src.agents import collector, matcher, proposer
 from src.agents import orchestrator as orch_module
 from src.tools.registry import ORCHESTRATOR_FUNCTIONS
 
@@ -54,9 +53,6 @@ class ChildAgentSpec:
 
 CHILD_AGENTS: list[ChildAgentSpec] = [
     ChildAgentSpec(
-        name=observer.NAME, description=observer.DESCRIPTION, instructions=observer.INSTRUCTIONS
-    ),
-    ChildAgentSpec(
         name=collector.NAME, description=collector.DESCRIPTION, instructions=collector.INSTRUCTIONS
     ),
     ChildAgentSpec(
@@ -70,7 +66,6 @@ CHILD_AGENTS: list[ChildAgentSpec] = [
 
 MANAGED_AGENT_NAMES = {
     orch_module.NAME,
-    observer.NAME,
     collector.NAME,
     matcher.NAME,
     proposer.NAME,
@@ -132,7 +127,6 @@ def main() -> int:
 
     # 4. .env 転記用に標準出力
     print(f"AGENT_ID={orchestrator_agent.id}")
-    print(f"AGENT_ID_OBSERVER={child_ids[observer.NAME]}")
     print(f"AGENT_ID_COLLECTOR={child_ids[collector.NAME]}")
     print(f"AGENT_ID_MATCHER={child_ids[matcher.NAME]}")
     print(f"AGENT_ID_PROPOSER={child_ids[proposer.NAME]}")

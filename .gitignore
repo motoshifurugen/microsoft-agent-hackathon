@@ -47,6 +47,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Claude Code handover / working state (ローカル専用)
+.agents/
+
 # Playwright MCP のページスナップショット (ローカル検証用)
 .playwright-mcp/
 *.png

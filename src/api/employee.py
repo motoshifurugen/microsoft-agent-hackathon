@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException
 
+from src.api.categories import CATEGORY_MASTER
 from src.api.schemas import (
     CategoryCasesResponse,
     CategorySummary,
@@ -52,6 +53,16 @@ def list_categories() -> list[CategorySummary]:
     # 件数の多い順に並べる (UX として人気カテゴリが目につく)
     summaries.sort(key=lambda c: c.case_count, reverse=True)
     return summaries
+
+
+@router.get("/categories/master", response_model=list[str])
+def category_master() -> list[str]:
+    """登録セレクト用の固定カテゴリマスタ (表示順)。
+
+    /categories が事例の有無で件数集計を返すのに対し、こちらは事例 0 件でも
+    常に全カテゴリを返す。登録フォームの選択肢の単一の真実。
+    """
+    return CATEGORY_MASTER
 
 
 @router.get("/categories/{name}/cases", response_model=CategoryCasesResponse)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserSummary(BaseModel):
@@ -68,6 +68,59 @@ class RecommendationResponse(BaseModel):
     target_business_type: str
     cases: list[CaseDetail]
     strategies: list[Strategy]
+
+
+class PainMatchRequest(BaseModel):
+    """WebApp 困りごと入力欄からのマッチング依頼。"""
+
+    text: str = Field(min_length=1, description="困りごとの自然文")
+    client_id: str = Field(default="", description="localStorage 由来の識別子。空なら匿名扱い")
+    business_context: str = Field(default="", description="業務文脈 (任意)")
+    top_k: int = Field(default=3, ge=1, le=10, description="返す事例の最大件数")
+
+    @field_validator("text")
+    @classmethod
+    def _text_not_blank(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("text must not be blank")
+        return stripped
+
+
+class PainMatchResponse(BaseModel):
+    """困りごとマッチング結果。"""
+
+    pain_point_id: str
+    query: str
+    cases: list[CaseDetail]
+
+
+class BookmarkRequest(BaseModel):
+    """Skill ブックマーク追加リクエスト。"""
+
+    client_id: str = Field(min_length=1, description="localStorage 由来の所有者識別子")
+    case_id: str = Field(min_length=1, description="ブックマーク対象の成功事例 ID")
+
+
+class CaseCreateRequest(BaseModel):
+    """ユーザーが自分の成功事例を共有フォームから登録するリクエスト。"""
+
+    client_id: str = Field(min_length=1, description="登録者の識別子 (user_id として保存)")
+    owner_label: str = Field(min_length=1, description="表示名 (例: 営業部 佐藤さん)")
+    business_type: str = Field(min_length=1, description="業務カテゴリ")
+    what_worked: str = Field(min_length=1, description="うまくいったこと / やったこと")
+    why_worked: str = Field(default="", description="なぜ効いたか (任意)")
+    concrete_prompt: str = Field(default="", description="使ったプロンプト (任意)")
+    quantitative_effect: str = Field(default="", description="定量効果 (任意)")
+    reproducibility_score: float = Field(default=0.5, ge=0.0, le=1.0, description="再現性 0.0-1.0")
+
+    @field_validator("owner_label", "business_type", "what_worked")
+    @classmethod
+    def _not_blank(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("must not be blank")
+        return stripped
 
 
 class StrategyExecuteRequest(BaseModel):
